@@ -113,6 +113,17 @@ export default function ModelCard() {
         ))}
       </div>
 
+      {/* Architecture diagram */}
+      <section className="card-elevated p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Network className="w-4 h-4 text-primary" />
+          </div>
+          <h2 className="text-lg font-semibold">{locale === "es" ? "Arquitectura del sistema" : "System architecture"}</h2>
+        </div>
+        <ArchitectureDiagram />
+      </section>
+
       {sections.map((s, i) => {
         const Icon = s.Icon;
         return (
@@ -137,6 +148,60 @@ export default function ModelCard() {
           </section>
         );
       })}
+
+      {/* Rubric alignment */}
+      <section className="card-elevated p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <ListChecks className="w-4 h-4 text-primary" />
+          </div>
+          <h2 className="text-lg font-semibold">{locale === "es" ? "Alineación con la rúbrica" : "Rubric alignment"}</h2>
+        </div>
+        <div className="overflow-x-auto -mx-2 px-2">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left border-b border-border">
+                <th className="py-2 pr-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
+                  {locale === "es" ? "Criterio" : "Criterion"}
+                </th>
+                <th className="py-2 px-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
+                  {locale === "es" ? "Cómo Spark AZ lo cubre" : "How Spark AZ delivers"}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr]:border-b [&_tr]:border-border/60 [&_td]:py-2.5 [&_td]:align-top">
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "Una Salud" : "One Health"}</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Reportes humanos + animales + ambientales unidos en un solo puntaje compuesto y mapa." : "Human + animal + environmental check-ins fused into one composite score and map."}</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "Datos abiertos" : "Open data"}</td>
+                <td className="px-3 text-foreground/85">Open-Meteo (wx + AQI), OpenSky (arrivals), TIGER (county geometry), ADHS/CDC reference, EpiCore-style demo feed.</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "IA explicable" : "Explainable AI"}</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Panel XAI con barras por impulsor, tooltips por categoría y narrativa Gemini con citas." : "XAI panel with per-driver bars, category tooltips, and Gemini narrative citing inputs."}</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">HITL</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Cola de revisión analista (aprobar / editar / rechazar) con auditoría completa." : "Analyst review queue (approve / edit / reject) with full audit log of every action."}</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "Equidad" : "Equity"}</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Bilingüe EN/ES, los 15 condados de AZ, móvil primero, autenticación anónima sin PII." : "Bilingual EN/ES, all 15 AZ counties, mobile-first, anonymous auth, no PII collected."}</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "Detección temprana" : "Early detection"}</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Detección de clústeres k-means + simulador + vigilancia de importación por viaje." : "k-means symptom clustering + travel-import watch + simulator for what-if exposure."}</td>
+              </tr>
+              <tr>
+                <td className="pr-3 font-semibold">{locale === "es" ? "Transparencia" : "Transparency"}</td>
+                <td className="px-3 text-foreground/85">{locale === "es" ? "Esta ficha del modelo + página de fuentes de datos + diagrama de arquitectura." : "This model card + data sources page + architecture diagram, all linked from every screen."}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="text-xs text-muted-foreground text-center pt-4">
         Spark AZ is an academic prototype for the University of Arizona Ending Pandemics Academy "Spot the Spark" Challenge — May 2026.
