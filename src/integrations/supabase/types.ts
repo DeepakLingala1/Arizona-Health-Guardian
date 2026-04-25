@@ -16,150 +16,306 @@ export type Database = {
     Tables: {
       ai_insights: {
         Row: {
-          drivers: Json | null
-          generated_at: string | null
+          drivers: Json
+          generated_at: string
           id: string
           insight: string | null
-          recommendations: Json | null
+          language: string
+          recommendations: Json
           scope: string
           scope_id: string
         }
         Insert: {
-          drivers?: Json | null
-          generated_at?: string | null
+          drivers?: Json
+          generated_at?: string
           id?: string
           insight?: string | null
-          recommendations?: Json | null
+          language?: string
+          recommendations?: Json
           scope: string
           scope_id: string
         }
         Update: {
-          drivers?: Json | null
-          generated_at?: string | null
+          drivers?: Json
+          generated_at?: string
           id?: string
           insight?: string | null
-          recommendations?: Json | null
+          language?: string
+          recommendations?: Json
           scope?: string
           scope_id?: string
         }
         Relationships: []
       }
+      alerts: {
+        Row: {
+          ai_generated: boolean
+          body: string
+          county: string
+          created_at: string
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+          status: string
+          title: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          body: string
+          county: string
+          created_at?: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity: string
+          status?: string
+          title: string
+        }
+        Update: {
+          ai_generated?: boolean
+          body?: string
+          county?: string
+          created_at?: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       checkins: {
         Row: {
+          animal_count: number | null
+          animal_signs: string[]
+          animal_type: string | null
+          category: string
           county: string
-          created_at: string | null
+          created_at: string
+          env_signals: string[]
           id: string
           known_exposure: boolean | null
           mood: number | null
+          notes: string | null
           recent_travel: boolean | null
           risk_score: number | null
-          symptoms: string[] | null
+          symptoms: string[]
+          travel_destination: string | null
           user_id: string | null
         }
         Insert: {
+          animal_count?: number | null
+          animal_signs?: string[]
+          animal_type?: string | null
+          category: string
           county: string
-          created_at?: string | null
+          created_at?: string
+          env_signals?: string[]
           id?: string
           known_exposure?: boolean | null
           mood?: number | null
+          notes?: string | null
           recent_travel?: boolean | null
           risk_score?: number | null
-          symptoms?: string[] | null
+          symptoms?: string[]
+          travel_destination?: string | null
           user_id?: string | null
         }
         Update: {
+          animal_count?: number | null
+          animal_signs?: string[]
+          animal_type?: string | null
+          category?: string
           county?: string
-          created_at?: string | null
+          created_at?: string
+          env_signals?: string[]
           id?: string
           known_exposure?: boolean | null
           mood?: number | null
+          notes?: string | null
           recent_travel?: boolean | null
           risk_score?: number | null
-          symptoms?: string[] | null
+          symptoms?: string[]
+          travel_destination?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "checkins_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       county_daily: {
         Row: {
-          aggregate_risk: number | null
           air_quality: Json | null
-          checkin_count: number | null
-          clusters: Json | null
+          animal_score: number
+          checkin_count: number
+          clusters: Json
+          composite_risk: number
           county: string
           date: string
-          top_symptoms: Json | null
-          updated_at: string | null
+          env_score: number
+          human_score: number
+          top_animal_signs: Json
+          top_env_signals: Json
+          top_human_symptoms: Json
+          updated_at: string
+          vector_score: number
           weather: Json | null
         }
         Insert: {
-          aggregate_risk?: number | null
           air_quality?: Json | null
-          checkin_count?: number | null
-          clusters?: Json | null
+          animal_score?: number
+          checkin_count?: number
+          clusters?: Json
+          composite_risk?: number
           county: string
           date: string
-          top_symptoms?: Json | null
-          updated_at?: string | null
+          env_score?: number
+          human_score?: number
+          top_animal_signs?: Json
+          top_env_signals?: Json
+          top_human_symptoms?: Json
+          updated_at?: string
+          vector_score?: number
           weather?: Json | null
         }
         Update: {
-          aggregate_risk?: number | null
           air_quality?: Json | null
-          checkin_count?: number | null
-          clusters?: Json | null
+          animal_score?: number
+          checkin_count?: number
+          clusters?: Json
+          composite_risk?: number
           county?: string
           date?: string
-          top_symptoms?: Json | null
-          updated_at?: string | null
+          env_score?: number
+          human_score?: number
+          top_animal_signs?: Json
+          top_env_signals?: Json
+          top_human_symptoms?: Json
+          updated_at?: string
+          vector_score?: number
           weather?: Json | null
+        }
+        Relationships: []
+      }
+      epicore_feed: {
+        Row: {
+          hazard: string
+          id: string
+          observed_at: string
+          pathway: string | null
+          region: string
+          severity: number
+          summary: string
+        }
+        Insert: {
+          hazard: string
+          id?: string
+          observed_at?: string
+          pathway?: string | null
+          region: string
+          severity?: number
+          summary: string
+        }
+        Update: {
+          hazard?: string
+          id?: string
+          observed_at?: string
+          pathway?: string | null
+          region?: string
+          severity?: number
+          summary?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           age_band: string | null
-          conditions: string[] | null
-          created_at: string | null
-          home_county: string | null
+          conditions: string[]
+          created_at: string
+          home_county: string
           id: string
+          language: string
           last_checkin_date: string | null
-          streak: number | null
+          onboarded: boolean
+          persona: string
+          role: string
+          streak: number
         }
         Insert: {
           age_band?: string | null
-          conditions?: string[] | null
-          created_at?: string | null
-          home_county?: string | null
+          conditions?: string[]
+          created_at?: string
+          home_county?: string
           id: string
+          language?: string
           last_checkin_date?: string | null
-          streak?: number | null
+          onboarded?: boolean
+          persona?: string
+          role?: string
+          streak?: number
         }
         Update: {
           age_band?: string | null
-          conditions?: string[] | null
-          created_at?: string | null
-          home_county?: string | null
+          conditions?: string[]
+          created_at?: string
+          home_county?: string
           id?: string
+          language?: string
           last_checkin_date?: string | null
-          streak?: number | null
+          onboarded?: boolean
+          persona?: string
+          role?: string
+          streak?: number
         }
         Relationships: []
+      }
+      review_log: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          alert_id: string | null
+          before: Json | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          alert_id?: string | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          alert_id?: string | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_log_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: { Args: { _role: string; _uid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
