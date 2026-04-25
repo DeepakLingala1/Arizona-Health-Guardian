@@ -1,8 +1,9 @@
 // Spark AZ — Model Card (judge-ready transparency)
 import { useLocale } from "@/lib/i18n";
 import {
-  ShieldCheck, GitBranch, Cog, AlertTriangle, Users, Gauge, BarChart3, BookOpen,
+  ShieldCheck, GitBranch, Cog, AlertTriangle, Users, Gauge, BarChart3, BookOpen, Network, ListChecks,
 } from "lucide-react";
+import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
 
 export default function ModelCard() {
   const { t, locale } = useLocale();
