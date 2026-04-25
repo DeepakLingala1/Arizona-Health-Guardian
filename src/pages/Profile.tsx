@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COUNTY_NAMES } from "@/lib/azCounties";
 import { PERSONAS, PersonaId, getPersona } from "@/lib/personas";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, ClipboardCheck, FileText, Database, Users } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, FileText, Database, Users, RefreshCw } from "lucide-react";
 
 const CONDITIONS = [
   { id: "asthma", en: "Asthma", es: "Asma" },
@@ -26,6 +26,33 @@ export default function Profile() {
   const [county, setCounty] = useState<string>(profile?.home_county ?? "Pima");
   const [conditions, setConditions] = useState<string[]>(profile?.conditions ?? []);
   const [busy, setBusy] = useState(false);
+  const [reseeding, setReseeding] = useState(false);
+
+  async function resetDemo() {
+    if (!confirm(locale === "es"
+      ? "¿Borrar datos de demo y volver a sembrar? Esto puede tardar 10–20 segundos."
+      : "Wipe demo data and reseed? This may take 10–20 seconds.")) return;
+    setReseeding(true);
+    try {
+      // Wipe checkins, county_daily, alerts, review_log, ai_insights cache
+      await supabase.from("review_log").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("alerts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("ai_insights").delete().neq("scope_id", "");
+      await supabase.from("county_daily").delete().neq("county", "");
+      await supabase.from("checkins").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      toast.message(locale === "es" ? "Sembrando datos…" : "Reseeding demo data…");
+      await supabase.functions.invoke("seed-demo");
+      toast.message(locale === "es" ? "Calculando agregados…" : "Computing aggregates…");
+      await supabase.functions.invoke("compute-county-aggregate", { body: {} });
+      await supabase.functions.invoke("evaluate-alerts", { body: {} });
+      toast.success(locale === "es" ? "Demo restablecida" : "Demo reset complete");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Reset failed");
+    } finally {
+      setReseeding(false);
+    }
+  }
 
   async function save() {
     if (!user) return;
@@ -137,6 +164,31 @@ export default function Profile() {
         <button onClick={() => navigate("/data-sources")} className="card-elevated p-4 text-left hover:shadow-glow">
           <Database className="w-5 h-5 text-primary mb-2" />
           <div className="font-semibold">{t("nav.dataSources")}</div>
+        </button>
+      </div>
+
+      {/* Demo controls */}
+      <div className="card-elevated p-5 border-2 border-dashed border-spark/30 bg-spark/5">
+        <div className="flex items-center gap-2 mb-2">
+          <RefreshCw className="w-4 h-4 text-spark" />
+          <div className="text-xs uppercase tracking-widest text-spark font-bold">
+            {locale === "es" ? "Controles de demo" : "Demo controls"}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          {locale === "es"
+            ? "Borra todos los reportes, alertas y registros, luego vuelve a sembrar los datos sintéticos para los 4 escenarios."
+            : "Wipes all check-ins, alerts and logs, then reseeds the synthetic dataset for the 4 demo scenarios."}
+        </p>
+        <button
+          onClick={resetDemo}
+          disabled={reseeding}
+          className="px-4 py-2 rounded-lg bg-spark text-spark-foreground font-semibold text-sm hover:bg-spark/90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${reseeding ? "animate-spin" : ""}`} />
+          {reseeding
+            ? (locale === "es" ? "Restableciendo…" : "Resetting…")
+            : (locale === "es" ? "Restablecer datos de demo" : "Reset demo data")}
         </button>
       </div>
 
