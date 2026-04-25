@@ -6,3 +6,15 @@ verify_jwt = false
 
 [functions.generate-insight]
 verify_jwt = false
+
+[functions.evaluate-alerts]
+verify_jwt = false
+
+[functions.fetch-travel-imports]
+verify_jwt = false
+
+[functions.fetch-environment]
+verify_jwt = false
+
+[functions.review-action]
+verify_jwt = true

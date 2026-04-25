@@ -1,3 +1,4 @@
+// Spark AZ — aggregate last 24h check-ins into county_daily with One Health sub-scores + k-means clusters
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -5,197 +6,179 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const AZ_COUNTIES = [
-  { name: "Apache", lat: 35.39, lon: -109.49 },
-  { name: "Cochise", lat: 31.88, lon: -109.75 },
-  { name: "Coconino", lat: 35.84, lon: -111.77 },
-  { name: "Gila", lat: 33.80, lon: -110.81 },
-  { name: "Graham", lat: 32.93, lon: -109.89 },
-  { name: "Greenlee", lat: 33.21, lon: -109.24 },
-  { name: "La Paz", lat: 33.73, lon: -113.97 },
-  { name: "Maricopa", lat: 33.45, lon: -112.07 },
-  { name: "Mohave", lat: 35.20, lon: -114.05 },
-  { name: "Navajo", lat: 35.40, lon: -110.32 },
-  { name: "Pima", lat: 32.22, lon: -110.93 },
-  { name: "Pinal", lat: 32.90, lon: -111.32 },
-  { name: "Santa Cruz", lat: 31.52, lon: -110.77 },
-  { name: "Yavapai", lat: 34.60, lon: -112.55 },
-  { name: "Yuma", lat: 32.69, lon: -114.63 },
-];
-
-const SYMPTOM_WEIGHTS: Record<string, number> = {
-  fever: 15, shortness_of_breath: 18, cough: 8, fatigue: 6, sore_throat: 5,
-  congestion: 4, headache: 5, body_aches: 7, gi_symptoms: 6, loss_of_taste_smell: 12,
+const COUNTIES = ["Apache","Cochise","Coconino","Gila","Graham","Greenlee","La Paz","Maricopa","Mohave","Navajo","Pima","Pinal","Santa Cruz","Yavapai","Yuma"];
+const COUNTY_COORDS: Record<string,[number,number]> = {
+  Apache:[35.39,-109.49], Cochise:[31.88,-109.75], Coconino:[35.84,-111.77],
+  Gila:[33.80,-110.81], Graham:[32.93,-109.89], Greenlee:[33.21,-109.24],
+  "La Paz":[33.73,-113.97], Maricopa:[33.45,-112.07], Mohave:[35.20,-114.05],
+  Navajo:[35.40,-110.32], Pima:[32.22,-110.93], Pinal:[32.90,-111.32],
+  "Santa Cruz":[31.52,-110.77], Yavapai:[34.60,-112.55], Yuma:[32.69,-114.63],
 };
-const ALL_SYMPTOMS = Object.keys(SYMPTOM_WEIGHTS);
 
-// Tiny k-means
-function dist(a: number[], b: number[]) { let s = 0; for (let i = 0; i < a.length; i++) s += (a[i]-b[i])**2; return Math.sqrt(s); }
-function kmeans(points: number[][], k: number, maxIter = 20) {
-  if (!points.length) return { centroids: [], assignments: [] };
-  const dim = points[0].length;
+const SYMPTOM_VOCAB = ["fever","shortness_of_breath","cough","fatigue","sore_throat","congestion","headache","body_aches","gi_symptoms","loss_of_taste_smell"];
+const SYMPTOM_WEIGHTS: Record<string, number> = { fever:15, shortness_of_breath:18, cough:8, fatigue:6, gi_symptoms:7, body_aches:5, headache:3, congestion:3, sore_throat:3, loss_of_taste_smell:10 };
+const ANIMAL_WEIGHTS: Record<string, number> = { sick_livestock:8, dead_bird_cluster:10, rodent_activity:6, unusual_pet_symptoms:5, mass_mortality:12, dead_wildlife:6 };
+
+function dist(a: number[], b: number[]) { let s=0; for (let i=0;i<a.length;i++) s+=(a[i]-b[i])**2; return Math.sqrt(s); }
+function kmeans(points: number[][], k: number, maxIter=20) {
+  if (points.length === 0) return { centroids: [], assignments: [] };
   k = Math.min(k, points.length);
+  const dim = points[0].length;
   const centroids: number[][] = [points[Math.floor(Math.random()*points.length)].slice()];
   while (centroids.length < k) {
-    const dists = points.map((p) => Math.min(...centroids.map((c) => dist(p, c))));
-    const total = dists.reduce((a,b)=>a+b,0) || 1;
-    let r = Math.random()*total; let pick = 0;
-    for (let i=0;i<dists.length;i++){ r-=dists[i]; if(r<=0){pick=i;break;} }
+    const dists = points.map(p => Math.min(...centroids.map(c => dist(p,c))));
+    const total = dists.reduce((a,b)=>a+b, 0) || 1;
+    let r = Math.random()*total, pick = 0;
+    for (let i=0;i<dists.length;i++) { r-=dists[i]; if (r<=0) { pick=i; break; } }
     centroids.push(points[pick].slice());
   }
-  const assignments = new Array(points.length).fill(0);
+  let assignments = new Array(points.length).fill(0);
   for (let it=0; it<maxIter; it++) {
     let changed = false;
     for (let i=0;i<points.length;i++){
-      let best=0,bd=Infinity;
-      for(let c=0;c<k;c++){const d=dist(points[i],centroids[c]); if(d<bd){bd=d;best=c;}}
-      if (assignments[i]!==best){assignments[i]=best;changed=true;}
+      let best=0, bd=Infinity;
+      for (let c=0;c<centroids.length;c++){ const d=dist(points[i], centroids[c]); if (d<bd){ bd=d; best=c; } }
+      if (assignments[i] !== best) { assignments[i]=best; changed=true; }
     }
-    const sums = Array.from({length:k},()=>new Array(dim).fill(0));
+    const sums = Array.from({length:k}, ()=> new Array(dim).fill(0));
     const counts = new Array(k).fill(0);
-    for (let i=0;i<points.length;i++){const a=assignments[i];counts[a]++;for(let d=0;d<dim;d++)sums[a][d]+=points[i][d];}
-    for (let c=0;c<k;c++) if(counts[c]>0) for(let d=0;d<dim;d++) centroids[c][d]=sums[c][d]/counts[c];
+    for (let i=0;i<points.length;i++){ counts[assignments[i]]++; for (let d=0;d<dim;d++) sums[assignments[i]][d]+=points[i][d]; }
+    for (let c=0;c<k;c++) if (counts[c]>0) for (let d=0;d<dim;d++) centroids[c][d]=sums[c][d]/counts[c];
     if (!changed) break;
   }
   return { centroids, assignments };
 }
 
-async function fetchEnv(lat: number, lon: number) {
-  try {
-    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&timezone=America/Phoenix&temperature_unit=fahrenheit`).then(r => r.json());
-    const aq = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5,ozone,dust&timezone=America/Phoenix`).then(r => r.json());
-    return {
-      weather: {
-        temperatureF: w.current?.temperature_2m,
-        humidity: w.current?.relative_humidity_2m,
-        precipitation: w.current?.precipitation,
-        code: w.current?.weather_code,
-      },
-      air_quality: {
-        aqi: aq.current?.us_aqi,
-        pm10: aq.current?.pm10,
-        pm25: aq.current?.pm2_5,
-        ozone: aq.current?.ozone,
-        dust: aq.current?.dust,
-      },
-    };
-  } catch (e) {
-    console.error("env fetch err", e);
-    return { weather: null, air_quality: null };
+function symptomLabel(centroid: number[]): string {
+  const idxs = centroid.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v).slice(0,3).filter(x=>x.v>0.15);
+  if (idxs.length === 0) return "Mixed";
+  const names = idxs.map(x => SYMPTOM_VOCAB[x.i]);
+  if (names.includes("cough") && names.includes("fever")) return "Respiratory (cough + fever)";
+  if (names.includes("gi_symptoms")) return "Gastrointestinal";
+  if (names.includes("loss_of_taste_smell")) return "COVID-like";
+  return names.slice(0,2).join(" + ");
+}
+
+function topN<T>(items: T[], keyFn: (x:T)=>string, n=5) {
+  const counts = new Map<string, number>();
+  for (const it of items) {
+    const k = keyFn(it);
+    if (!k) continue;
+    counts.set(k, (counts.get(k) ?? 0) + 1);
   }
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,c])=>({ key: k, count: c }));
+}
+
+async function fetchEnv(county: string) {
+  const [lat, lon] = COUNTY_COORDS[county];
+  let weather: any = null, air: any = null;
+  try {
+    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&temperature_unit=fahrenheit&timezone=America/Phoenix`);
+    if (w.ok) weather = (await w.json()).current;
+  } catch {}
+  try {
+    const a = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5,ozone,dust&timezone=America/Phoenix`);
+    if (a.ok) air = (await a.json()).current;
+  } catch {}
+  return { weather, air_quality: air };
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supa = createClient(url, key);
 
-  try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+  const today = new Date().toISOString().slice(0, 10);
+  const since = new Date(Date.now() - 24*60*60*1000).toISOString();
 
-    const body = await req.json().catch(() => ({}));
-    const targets: string[] = body.county ? [body.county] : AZ_COUNTIES.map((c) => c.name);
-    const today = new Date().toISOString().slice(0, 10);
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  for (const county of COUNTIES) {
+    const { data: rows } = await supa
+      .from("checkins")
+      .select("category, symptoms, animal_signs, env_signals, mood, known_exposure, recent_travel")
+      .eq("county", county)
+      .gte("created_at", since);
 
-    const results = [];
-    for (const countyName of targets) {
-      const meta = AZ_COUNTIES.find((c) => c.name === countyName);
-      if (!meta) continue;
+    const list = rows ?? [];
+    const selfRows = list.filter(r => r.category === "self");
+    const animalRows = list.filter(r => r.category === "animal");
+    const envRows = list.filter(r => r.category === "environment");
 
-      // Last 24h checkins for county
-      const { data: checkins } = await supabase
-        .from("checkins")
-        .select("symptoms, mood, recent_travel, known_exposure, risk_score, created_at")
-        .eq("county", countyName)
-        .gte("created_at", since);
+    // Sub-scores (mean per category, scaled 0..100)
+    let humanRaw = 0;
+    for (const r of selfRows) {
+      let s = 0;
+      for (const sym of (r.symptoms ?? [])) s += SYMPTOM_WEIGHTS[sym] ?? 3;
+      if (r.known_exposure) s += 12;
+      if (r.recent_travel) s += 6;
+      humanRaw += Math.min(s, 50);
+    }
+    const human = selfRows.length ? Math.min(100, Math.round((humanRaw / selfRows.length) * 1.5)) : 0;
 
-      const list = checkins ?? [];
+    let animalRaw = 0;
+    for (const r of animalRows) {
+      let s = 0;
+      for (const a of (r.animal_signs ?? [])) s += ANIMAL_WEIGHTS[a] ?? 3;
+      animalRaw += Math.min(s, 30);
+    }
+    const animal = animalRows.length ? Math.min(100, Math.round((animalRaw / animalRows.length) * 2.2)) : 0;
 
-      // Top symptoms
-      const symptomCounts: Record<string, number> = {};
-      for (const c of list) {
-        for (const s of (c.symptoms ?? [])) symptomCounts[s] = (symptomCounts[s] ?? 0) + 1;
-      }
-      const topSymptoms = Object.entries(symptomCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([symptom, count]) => ({ symptom, count }));
+    let vector = 0, env = 0;
+    for (const r of envRows) {
+      const sig = r.env_signals ?? [];
+      if (sig.includes("mosquito_high")) vector += 8;
+      if (sig.includes("standing_water")) vector += 4;
+      if (sig.includes("monsoon_active")) vector += 3;
+      if (sig.includes("dust_storm")) env += 6;
+      if (sig.includes("smoke")) env += 6;
+      if (sig.includes("monsoon_flood")) env += 4;
+    }
+    vector = envRows.length ? Math.min(100, Math.round(vector / envRows.length * 4)) : 0;
+    env = envRows.length ? Math.min(100, Math.round(env / envRows.length * 4)) : 0;
 
-      // Aggregate risk = avg of risk scores or computed proxy
-      let aggregateRisk = 25;
-      if (list.length > 0) {
-        const validScores = list.map((c) => c.risk_score).filter((s): s is number => typeof s === "number");
-        if (validScores.length) {
-          aggregateRisk = Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length);
-        } else {
-          // proxy: use symptom prevalence
-          const avgSymp = list.reduce((a, c) => a + ((c.symptoms?.length) ?? 0), 0) / list.length;
-          aggregateRisk = Math.min(90, Math.round(20 + avgSymp * 12));
-        }
-      }
+    // Environmental boost from real weather/AQI
+    const { weather, air_quality } = await fetchEnv(county);
+    if (air_quality?.us_aqi > 100) env = Math.min(100, env + 12);
+    else if (air_quality?.us_aqi > 50) env = Math.min(100, env + 6);
+    if (air_quality?.dust > 50) env = Math.min(100, env + 8);
+    if (weather?.temperature_2m >= 100) env = Math.min(100, env + 6);
 
-      // Symptom vector clustering
-      const vectors = list
-        .filter((c) => (c.symptoms?.length ?? 0) > 0)
-        .map((c) => ALL_SYMPTOMS.map((s) => (c.symptoms as string[]).includes(s) ? 1 : 0));
+    const composite = Math.round(human*0.45 + animal*0.20 + vector*0.15 + env*0.20);
 
-      let clusters: { name: string; size: number; topSymptoms: string[] }[] = [];
-      if (vectors.length >= 6) {
-        const { centroids, assignments } = kmeans(vectors, 3);
-        const groups: Record<number, number[][]> = {};
-        for (let i = 0; i < assignments.length; i++) {
-          const a = assignments[i];
-          (groups[a] ??= []).push(vectors[i]);
-        }
-        clusters = centroids.map((centroid, idx) => {
-          const top = ALL_SYMPTOMS
-            .map((s, i) => ({ s, v: centroid[i] }))
-            .sort((a, b) => b.v - a.v)
-            .slice(0, 3)
-            .filter((x) => x.v > 0.25)
-            .map((x) => x.s);
-          const size = (groups[idx] ?? []).length;
-          let name = "Mixed cluster";
-          if (top.includes("cough") && (top.includes("fever") || top.includes("fatigue"))) name = "Respiratory cluster";
-          else if (top.includes("gi_symptoms")) name = "GI cluster";
-          else if (top.includes("headache") && top.includes("congestion")) name = "Allergy/sinus cluster";
-          return { name, size, topSymptoms: top };
-        }).filter((c) => c.size > 0);
-      }
+    const top_human_symptoms = topN(selfRows.flatMap((r:any)=> r.symptoms ?? []), (s:string)=>s);
+    const top_animal_signs = topN(animalRows.flatMap((r:any)=> r.animal_signs ?? []), (s:string)=>s);
+    const top_env_signals = topN(envRows.flatMap((r:any)=> r.env_signals ?? []), (s:string)=>s);
 
-      const env = await fetchEnv(meta.lat, meta.lon);
-
-      // Bump aggregate by environmental + community
-      const aqi = env.air_quality?.aqi ?? 0;
-      const dust = env.air_quality?.dust ?? 0;
-      const heat = (env.weather?.temperatureF ?? 0) >= 100 ? 5 : 0;
-      aggregateRisk = Math.min(100, aggregateRisk + (aqi > 100 ? 8 : aqi > 50 ? 4 : 0) + (dust > 50 ? 6 : 0) + heat);
-
-      await supabase.from("county_daily").upsert({
-        county: countyName,
-        date: today,
-        checkin_count: list.length,
-        top_symptoms: topSymptoms,
-        aggregate_risk: aggregateRisk,
-        weather: env.weather,
-        air_quality: env.air_quality,
-        clusters,
-        updated_at: new Date().toISOString(),
-      });
-
-      results.push({ county: countyName, aggregateRisk, checkin_count: list.length, clusters });
+    // K-means on symptom vectors
+    const vectors = selfRows
+      .map((r:any) => SYMPTOM_VOCAB.map(s => (r.symptoms ?? []).includes(s) ? 1 : 0))
+      .filter(v => v.some(x => x === 1));
+    let clusters: any[] = [];
+    if (vectors.length >= 6) {
+      const k = Math.min(3, Math.max(2, Math.floor(vectors.length / 5)));
+      const km = kmeans(vectors, k);
+      const groupCounts = new Array(km.centroids.length).fill(0);
+      km.assignments.forEach((a:number) => groupCounts[a]++);
+      clusters = km.centroids.map((c, i) => ({
+        label: symptomLabel(c),
+        size: groupCounts[i],
+        centroid: c.map(v => Math.round(v*100)/100),
+      })).filter(c => c.size >= 2).sort((a,b) => b.size - a.size);
     }
 
-    return new Response(JSON.stringify({ ok: true, results }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("compute-county-aggregate error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    await supa.from("county_daily").upsert({
+      county, date: today,
+      checkin_count: list.length,
+      human_score: human, animal_score: animal, vector_score: vector, env_score: env,
+      composite_risk: composite,
+      top_human_symptoms, top_animal_signs, top_env_signals,
+      weather, air_quality,
+      clusters,
+      updated_at: new Date().toISOString(),
     });
   }
+
+  return new Response(JSON.stringify({ ok: true, counties: COUNTIES.length }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 });

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AZ Health Pulse Design System */
+/* Spark AZ — One Health Design System */
 
 @layer base {
   :root {
@@ -14,25 +14,38 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 9%;
 
-    /* Primary: Deep teal */
+    /* Primary: Deep clinical teal */
     --primary: 179 80% 27%;            /* #0E7C7B */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 179 70% 38%;
+    --primary-glow: 179 65% 38%;
 
-    /* Accent: Sunset coral */
-    --accent: 6 100% 68%;              /* #FF6B5B */
+    /* Spark / ember (CTA + alert) */
+    --spark: 21 94% 53%;               /* #F97316 */
+    --spark-foreground: 0 0% 100%;
+    --spark-glow: 21 94% 63%;
+
+    /* Earth (animal + environment + rural) */
+    --earth: 138 25% 46%;              /* #5A8F69 */
+    --earth-foreground: 0 0% 100%;
+
+    /* Vector (mosquito/zoonotic accent) */
+    --vector: 271 60% 55%;             /* purple */
+    --vector-foreground: 0 0% 100%;
+
+    /* Mapped to shadcn accent slot — keep legacy compat */
+    --accent: 21 94% 53%;
     --accent-foreground: 0 0% 100%;
 
     --secondary: 179 30% 94%;
     --secondary-foreground: 179 80% 18%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 220 9% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;             /* #E5E7EB */
+    --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 179 80% 27%;
 
@@ -47,16 +60,16 @@
     /* Gradients */
     --gradient-risk: linear-gradient(135deg, hsl(var(--risk-low)), hsl(var(--risk-moderate)) 33%, hsl(var(--risk-elevated)) 66%, hsl(var(--risk-high)));
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(15 90% 60%));
-    --gradient-hero: linear-gradient(160deg, hsl(179 80% 27% / 0.05), hsl(6 100% 68% / 0.05));
+    --gradient-spark: linear-gradient(135deg, hsl(var(--spark)), hsl(var(--spark-glow)));
+    --gradient-earth: linear-gradient(135deg, hsl(var(--earth)), hsl(138 30% 56%));
+    --gradient-hero: linear-gradient(160deg, hsl(179 80% 27% / 0.06), hsl(21 94% 53% / 0.05));
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(220 40% 10% / 0.05);
-    --shadow-card: 0 4px 24px -8px hsl(220 40% 10% / 0.08);
+    --shadow-card: 0 4px 24px -10px hsl(220 40% 10% / 0.08);
     --shadow-glow: 0 8px 32px -12px hsl(var(--primary) / 0.4);
-    --shadow-accent-glow: 0 8px 32px -12px hsl(var(--accent) / 0.4);
+    --shadow-spark: 0 8px 32px -12px hsl(var(--spark) / 0.45);
 
-    /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 9%;
     --sidebar-primary: 179 80% 27%;
@@ -68,52 +81,60 @@
   }
 
   .dark {
-    --background: 222 33% 8%;          /* #0B1220 */
+    --background: 222 33% 8%;
     --foreground: 210 40% 98%;
-    --card: 222 28% 12%;               /* #111827 */
+    --card: 222 28% 12%;
     --card-foreground: 210 40% 98%;
     --popover: 222 28% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 179 65% 45%;
+    --primary: 179 60% 48%;
     --primary-foreground: 222 33% 8%;
-    --primary-glow: 179 70% 55%;
+    --primary-glow: 179 65% 58%;
 
-    --accent: 6 100% 68%;
+    --spark: 21 95% 60%;
+    --spark-foreground: 222 33% 8%;
+    --spark-glow: 21 95% 70%;
+
+    --earth: 138 30% 56%;
+    --earth-foreground: 222 33% 8%;
+
+    --vector: 271 60% 65%;
+    --vector-foreground: 222 33% 8%;
+
+    --accent: 21 95% 60%;
     --accent-foreground: 222 33% 8%;
 
     --secondary: 222 25% 18%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 222 25% 16%;
-    --muted-foreground: 215 16% 65%;
+    --muted-foreground: 215 16% 70%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 22% 18%;             /* #1F2937 */
+    --border: 222 22% 18%;
     --input: 222 22% 18%;
-    --ring: 179 65% 45%;
+    --ring: 179 60% 48%;
 
-    --gradient-hero: linear-gradient(160deg, hsl(179 80% 27% / 0.15), hsl(6 100% 68% / 0.1));
+    --gradient-hero: linear-gradient(160deg, hsl(179 80% 27% / 0.18), hsl(21 95% 60% / 0.10));
 
-    --shadow-card: 0 4px 24px -8px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 4px 24px -8px hsl(0 0% 0% / 0.5);
 
     --sidebar-background: 222 33% 8%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 179 65% 45%;
+    --sidebar-primary: 179 60% 48%;
     --sidebar-primary-foreground: 222 33% 8%;
     --sidebar-accent: 222 25% 16%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222 22% 18%;
-    --sidebar-ring: 179 65% 45%;
+    --sidebar-ring: 179 60% 48%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -125,15 +146,24 @@
     font-feature-settings: "cv11", "ss01";
   }
 
+  h1, h2, h3, h4 { letter-spacing: -0.02em; }
+
   .tabular-nums {
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Better focus rings for a11y */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 8px;
   }
 }
 
 @layer components {
   .card-elevated {
-    @apply bg-card border border-border rounded-2xl shadow-[var(--shadow-card)];
+    @apply bg-card border border-border rounded-2xl shadow-card;
   }
 
   .gradient-border {
@@ -154,6 +184,9 @@
     mask-composite: exclude;
     pointer-events: none;
   }
+
+  .spark-border::before { background: var(--gradient-spark); }
+  .earth-border::before { background: var(--gradient-earth); }
 
   .text-risk-low { color: hsl(var(--risk-low)); }
   .text-risk-moderate { color: hsl(var(--risk-moderate)); }
@@ -176,4 +209,9 @@
   background: hsl(var(--card)) !important;
   color: hsl(var(--card-foreground)) !important;
   border: 1px solid hsl(var(--border));
+}
+.leaflet-control-attribution {
+  background: hsl(var(--card) / 0.8) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 10px !important;
 }

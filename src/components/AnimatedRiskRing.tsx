@@ -1,79 +1,45 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { useEffect } from "react";
-import { bandFor } from "@/lib/riskScore";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-interface Props {
-  score: number;
-  size?: number;
-  showBand?: boolean;
-}
-
-export function AnimatedRiskRing({ score, size = 220, showBand = true }: Props) {
-  const stroke = size * 0.07;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const band = bandFor(score);
-
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest));
-  const dashOffset = useTransform(count, (v) => circumference - (v / 100) * circumference);
-
-  useEffect(() => {
-    const controls = animate(count, score, { duration: 1.2, ease: "easeOut" });
-    return controls.stop;
-  }, [score, count]);
-
-  const bandColors: Record<typeof band, [string, string]> = {
-    Low: ["hsl(142 71% 45%)", "hsl(160 84% 39%)"],
-    Moderate: ["hsl(45 94% 53%)", "hsl(38 92% 50%)"],
-    Elevated: ["hsl(25 95% 56%)", "hsl(15 90% 55%)"],
-    High: ["hsl(0 84% 60%)", "hsl(350 89% 58%)"],
+export function AnimatedRiskRing({ score = 0 }: { score?: number }) {
+  const getStrokeColor = (s: number) => {
+    if (s < 25) return "var(--color-success)";
+    if (s < 50) return "var(--color-warning)";
+    if (s < 75) return "var(--color-orange)";
+    return "var(--color-destructive)";
   };
-  const [c1, c2] = bandColors[band];
+
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <defs>
-          <linearGradient id={`risk-grad-${band}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={c1} />
-            <stop offset="100%" stopColor={c2} />
-          </linearGradient>
-        </defs>
+    <div className="relative w-32 h-32 flex items-center justify-center">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx="50"
+          cy="50"
           r={radius}
           fill="none"
-          stroke="hsl(var(--muted))"
-          strokeWidth={stroke}
+          stroke="currentColor"
+          strokeWidth="8"
+          className="text-muted/20"
         />
         <motion.circle
-          cx={size / 2}
-          cy={size / 2}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          cx="50"
+          cy="50"
           r={radius}
           fill="none"
-          stroke={`url(#risk-grad-${band})`}
-          strokeWidth={stroke}
-          strokeLinecap="round"
+          stroke={getStrokeColor(score)}
+          strokeWidth="8"
           strokeDasharray={circumference}
-          style={{ strokeDashoffset: dashOffset }}
+          strokeLinecap="round"
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.div className="text-6xl font-bold tabular-nums leading-none" style={{ color: c1 }}>
-          {rounded}
-        </motion.div>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground mt-2">Risk Score</div>
-        {showBand && (
-          <div
-            className={cn("mt-3 px-3 py-1 rounded-full text-xs font-semibold")}
-            style={{ backgroundColor: `${c1}22`, color: c1 }}
-          >
-            {band}
-          </div>
-        )}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-3xl font-bold tabular-nums">{score}</div>
       </div>
     </div>
   );

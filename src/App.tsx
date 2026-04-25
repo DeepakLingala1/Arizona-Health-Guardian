@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LocaleProvider } from "@/lib/i18n";
 import { AppLayout } from "@/components/AppLayout";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,6 @@ function SeedBootstrap() {
       const { count } = await supabase.from("checkins").select("id", { count: "exact", head: true });
       if ((count ?? 0) < 50) {
         await supabase.functions.invoke("seed-demo");
-        // Then compute aggregates
         await supabase.functions.invoke("compute-county-aggregate", { body: {} });
       }
     })().catch(console.error);
@@ -37,26 +37,28 @@ function SeedBootstrap() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <SeedBootstrap />
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/checkin" element={<Checkin />} />
-                <Route path="/map" element={<MapPage />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/simulator" element={<Simulator />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLayout>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <LocaleProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <SeedBootstrap />
+              <AppLayout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/checkin" element={<Checkin />} />
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/simulator" element={<Simulator />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppLayout>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LocaleProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

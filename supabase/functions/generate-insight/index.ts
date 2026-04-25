@@ -1,3 +1,4 @@
+// Spark AZ — generate AI insight via Lovable AI Gateway (Gemini 2.5 Flash, JSON mode)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -5,189 +6,167 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface InsightPayload {
-  scope: "user" | "county" | "simulator" | "weekly";
-  scope_id: string;
-  context: Record<string, unknown>;
-}
+const SYSTEM_BASE = `You are a One Health surveillance assistant for Arizona, USA.
+Reference Arizona-specific threats where relevant: Valley Fever (Coccidioides) and dust storms, West Nile virus via Culex mosquitoes, Hantavirus from rodent exposure (especially in remote/tribal counties), monsoon-season respiratory and GI surges, extreme heat, wildfire smoke, and US-Mexico border-region travel-import dynamics.
+Be concise, calm, and actionable. Never claim diagnostic certainty. Never request PII.
+Always respond in the language requested. Output STRICT JSON matching the requested schema. No prose outside JSON.`;
 
-const SYSTEM_PROMPT = `You are AZ Health Pulse — an AI assistant for an Arizona community health risk platform.
-You provide concise, plain-English risk insights tailored to Arizona context (extreme heat, dust storms, monsoon season, Valley Fever, wildfire smoke, ozone in Maricopa/Pima).
-You are warm, never alarmist, and always actionable. You are NOT a doctor — when scores are high, suggest contacting a healthcare provider.
-Keep insights to 3–4 sentences. Recommendations must be specific (e.g., "wear an N95 outdoors today" not "be careful").`;
+const SCHEMAS: Record<string, any> = {
+  user: {
+    type: "object",
+    additionalProperties: false,
+    required: ["insight","recommendations"],
+    properties: {
+      insight: { type: "string", description: "3-4 sentence Arizona-contextual explanation of this person's risk." },
+      recommendations: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } },
+    },
+  },
+  county: {
+    type: "object",
+    additionalProperties: false,
+    required: ["summary","watchlist"],
+    properties: {
+      summary: { type: "string", description: "3-4 sentence summary of community risk for this county." },
+      watchlist: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } },
+    },
+  },
+  simulator: {
+    type: "object",
+    additionalProperties: false,
+    required: ["delta_explanation","top_factors"],
+    properties: {
+      delta_explanation: { type: "string" },
+      top_factors: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } },
+    },
+  },
+  digest: {
+    type: "object",
+    additionalProperties: false,
+    required: ["headline","key_findings","cluster_callouts"],
+    properties: {
+      headline: { type: "string" },
+      key_findings: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } },
+      cluster_callouts: { type: "array", items: { type: "string" } },
+    },
+  },
+};
+
+function buildPrompt(scope: string, payload: any, language: string): string {
+  const lang = language === "es" ? "Spanish" : "English";
+  if (scope === "user") {
+    return `Respond in ${lang}.
+A resident in ${payload.county} County, Arizona (persona: ${payload.persona}) has a composite risk score of ${payload.composite}/100 (band: ${payload.band}).
+Their One Health signals — Human: ${payload.subscores?.human}, Animal: ${payload.subscores?.animal}, Vector: ${payload.subscores?.vector}, Environmental: ${payload.subscores?.environmental}.
+Top drivers: ${(payload.drivers ?? []).slice(0,5).map((d:any)=>`${d.label} (${d.weight>0?"+":""}${d.weight})`).join("; ")}.
+Weather: ${JSON.stringify(payload.weather ?? {})}. Air: ${JSON.stringify(payload.air_quality ?? {})}.
+Top community symptoms: ${JSON.stringify(payload.top_symptoms ?? [])}.
+Recent global signals (EpiCore): ${(payload.epicore ?? []).slice(0,3).map((e:any)=>`${e.region}: ${e.hazard}`).join("; ")}.
+Write a 3-4 sentence personal insight + 3 specific recommendations they can act on today.`;
+  }
+  if (scope === "county") {
+    return `Respond in ${lang}.
+Summarize the public-health picture for ${payload.county} County, Arizona today. Composite risk: ${payload.composite}/100. Sub-scores — Human: ${payload.subscores?.human}, Animal: ${payload.subscores?.animal}, Vector: ${payload.subscores?.vector}, Environmental: ${payload.subscores?.environmental}.
+Top symptoms: ${JSON.stringify(payload.top_human_symptoms ?? [])}. Top animal signs: ${JSON.stringify(payload.top_animal_signs ?? [])}. Top env signals: ${JSON.stringify(payload.top_env_signals ?? [])}.
+Detected clusters: ${JSON.stringify(payload.clusters ?? [])}. Weather: ${JSON.stringify(payload.weather ?? {})}.
+Write a 3-4 sentence summary + 3 specific things public health should watch this week.`;
+  }
+  if (scope === "simulator") {
+    return `Respond in ${lang}.
+Simulating travel from ${payload.origin} County to ${payload.destination} County, Arizona for ${payload.days} days, primary activity: ${payload.activity}.
+Baseline composite at origin: ${payload.baseline}, projected at destination: ${payload.projected} (delta ${payload.projected - payload.baseline}).
+Explain in 2-3 sentences why the projected risk changes, and list the 3 biggest contributing factors.`;
+  }
+  // digest
+  return `Respond in ${lang}.
+You're writing the weekly Spark AZ One Health digest. Statewide top counties by composite: ${JSON.stringify(payload.top_counties ?? [])}.
+Active clusters: ${JSON.stringify(payload.clusters ?? [])}. EpiCore signals: ${JSON.stringify((payload.epicore ?? []).slice(0,5))}.
+Write a punchy headline + 3 key findings + 1-line callouts for each notable cluster.`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const { scope, scope_id, payload, language = "en", force = false } = await req.json();
+    if (!scope || !SCHEMAS[scope]) return new Response(JSON.stringify({ error: "invalid scope" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const url = Deno.env.get("SUPABASE_URL")!;
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supa = createClient(url, key);
 
-    const { scope, scope_id, context }: InsightPayload = await req.json();
-
-    // Cache: return existing insight if <2h old
-    const { data: cached } = await supabase
-      .from("ai_insights")
-      .select("*")
-      .eq("scope", scope)
-      .eq("scope_id", scope_id)
-      .order("generated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const cacheAgeMs = cached ? Date.now() - new Date(cached.generated_at as string).getTime() : Infinity;
-    if (cached && cacheAgeMs < 2 * 60 * 60 * 1000 && !context?.force) {
-      return new Response(JSON.stringify({ ...cached, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Cache lookup (10 min freshness)
+    if (!force) {
+      const { data: cached } = await supa
+        .from("ai_insights")
+        .select("*")
+        .eq("scope", scope).eq("scope_id", scope_id).eq("language", language)
+        .order("generated_at", { ascending: false }).limit(1).maybeSingle();
+      if (cached && (Date.now() - new Date(cached.generated_at).getTime()) < 10*60*1000) {
+        return new Response(JSON.stringify({ cached: true, ...cached }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
-    const userPrompt = buildPrompt(scope, context);
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const body = {
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: SYSTEM_BASE },
+        { role: "user", content: buildPrompt(scope, payload, language) },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: `emit_${scope}_insight`,
+          description: `Emit the ${scope}-scope insight as JSON.`,
+          parameters: SCHEMAS[scope],
+        },
+      }],
+      tool_choice: { type: "function", function: { name: `emit_${scope}_insight` } },
+    };
+
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "submit_insight",
-              description: "Submit a structured risk insight",
-              parameters: {
-                type: "object",
-                properties: {
-                  insight: { type: "string", description: "3-4 sentence plain English risk insight" },
-                  recommendations: {
-                    type: "array",
-                    items: { type: "string" },
-                    minItems: 3,
-                    maxItems: 3,
-                    description: "Exactly 3 specific actionable recommendations",
-                  },
-                  drivers: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        label: { type: "string" },
-                        weight: { type: "number" },
-                      },
-                      required: ["label", "weight"],
-                    },
-                    description: "Top 3 risk drivers with weights",
-                  },
-                },
-                required: ["insight", "recommendations", "drivers"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "submit_insight" } },
-      }),
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
-    if (!aiResp.ok) {
-      if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit reached. Please wait a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Add funds in Settings → Workspace → Usage." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const t = await aiResp.text();
-      console.error("AI gateway", aiResp.status, t);
-      // Fallback to cached if available
-      if (cached) {
-        return new Response(JSON.stringify({ ...cached, fallback: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      return new Response(JSON.stringify({ error: "AI unavailable" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (aiRes.status === 429 || aiRes.status === 402) {
+      return new Response(JSON.stringify({ error: aiRes.status === 429 ? "rate_limited" : "credits_required" }), {
+        status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!aiRes.ok) {
+      const t = await aiRes.text();
+      console.error("ai gateway", aiRes.status, t);
+      return new Response(JSON.stringify({ error: "ai_failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const data = await aiResp.json();
+    const data = await aiRes.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    let parsed: { insight: string; recommendations: string[]; drivers: { label: string; weight: number }[] };
+    let parsed: any = {};
     try {
       parsed = JSON.parse(toolCall?.function?.arguments ?? "{}");
-    } catch {
-      parsed = { insight: data.choices?.[0]?.message?.content ?? "Unable to parse insight.", recommendations: [], drivers: [] };
-    }
+    } catch (e) { console.error("parse", e); }
 
-    const { data: inserted } = await supabase
-      .from("ai_insights")
-      .insert({
-        scope,
-        scope_id,
-        insight: parsed.insight,
-        recommendations: parsed.recommendations,
-        drivers: parsed.drivers,
-      })
-      .select()
-      .single();
+    // Normalize per scope
+    let insight = "", recommendations: any[] = [], drivers = payload?.drivers ?? [];
+    if (scope === "user") { insight = parsed.insight ?? ""; recommendations = parsed.recommendations ?? []; }
+    else if (scope === "county") { insight = parsed.summary ?? ""; recommendations = parsed.watchlist ?? []; }
+    else if (scope === "simulator") { insight = parsed.delta_explanation ?? ""; recommendations = parsed.top_factors ?? []; }
+    else { insight = `${parsed.headline ?? ""}`; recommendations = parsed.key_findings ?? []; drivers = parsed.cluster_callouts ?? []; }
 
-    return new Response(JSON.stringify(inserted ?? parsed), {
+    const { data: saved } = await supa.from("ai_insights").insert({
+      scope, scope_id, language, insight, recommendations, drivers,
+    }).select().single();
+
+    return new Response(JSON.stringify({ cached: false, ...saved, raw: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("generate-insight error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error(e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
-
-function buildPrompt(scope: string, ctx: Record<string, unknown>): string {
-  if (scope === "user") {
-    return `Generate a personal risk insight for an Arizona resident.
-Score: ${ctx.score}/100 (band: ${ctx.band})
-County: ${ctx.county}
-Reported symptoms: ${JSON.stringify(ctx.symptoms ?? [])}
-Recent travel: ${ctx.recent_travel}, Known exposure: ${ctx.known_exposure}
-Conditions: ${JSON.stringify(ctx.conditions ?? [])}
-Local weather: ${JSON.stringify(ctx.weather ?? {})}
-Local air quality: ${JSON.stringify(ctx.air_quality ?? {})}
-County aggregate risk: ${ctx.county_aggregate}
-Top risk drivers: ${JSON.stringify(ctx.drivers ?? [])}
-
-Write a 3-4 sentence insight in plain English explaining WHY their risk is at this level today. Then 3 specific Arizona-aware recommendations.`;
-  }
-  if (scope === "county") {
-    return `Generate a county-level health summary for ${ctx.county} County, Arizona.
-Aggregate risk: ${ctx.aggregate_risk}/100
-Recent check-ins (24h): ${ctx.checkin_count}
-Top symptoms: ${JSON.stringify(ctx.top_symptoms ?? [])}
-Detected clusters: ${JSON.stringify(ctx.clusters ?? [])}
-Weather: ${JSON.stringify(ctx.weather ?? {})}
-Air quality: ${JSON.stringify(ctx.air_quality ?? {})}
-
-Write 3-4 sentences summarizing what's happening in this county today and 3 community-level recommendations.`;
-  }
-  if (scope === "simulator") {
-    return `An Arizona resident is considering travel from ${ctx.from} County to ${ctx.to} County for ${ctx.days} days.
-Origin risk: ${ctx.from_risk}, Destination risk: ${ctx.to_risk}, Projected personal score: ${ctx.projected}.
-Key delta drivers: ${JSON.stringify(ctx.delta_drivers ?? [])}.
-
-Explain in 3 sentences how this trip changes their risk and give 3 trip-specific precautions.`;
-  }
-  // weekly
-  return `Generate a weekly Arizona public health digest.
-Top counties by risk: ${JSON.stringify(ctx.top_counties ?? [])}
-Detected clusters this week: ${JSON.stringify(ctx.clusters ?? [])}
-State-level trend: ${ctx.trend ?? "stable"}.
-
-Write 3-4 sentences and 3 statewide recommendations.`;
-}

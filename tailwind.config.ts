@@ -25,6 +25,19 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
           glow: "hsl(var(--primary-glow))",
         },
+        spark: {
+          DEFAULT: "hsl(var(--spark))",
+          foreground: "hsl(var(--spark-foreground))",
+          glow: "hsl(var(--spark-glow))",
+        },
+        earth: {
+          DEFAULT: "hsl(var(--earth))",
+          foreground: "hsl(var(--earth-foreground))",
+        },
+        vector: {
+          DEFAULT: "hsl(var(--vector))",
+          foreground: "hsl(var(--vector-foreground))",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -69,13 +82,14 @@ export default {
       backgroundImage: {
         "gradient-risk": "var(--gradient-risk)",
         "gradient-primary": "var(--gradient-primary)",
-        "gradient-accent": "var(--gradient-accent)",
+        "gradient-spark": "var(--gradient-spark)",
+        "gradient-earth": "var(--gradient-earth)",
         "gradient-hero": "var(--gradient-hero)",
       },
       boxShadow: {
         card: "var(--shadow-card)",
         glow: "var(--shadow-glow)",
-        "accent-glow": "var(--shadow-accent-glow)",
+        spark: "var(--shadow-spark)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -88,9 +102,13 @@ export default {
         "fade-in": { "0%": { opacity: "0", transform: "translateY(8px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
         "scale-in": { "0%": { opacity: "0", transform: "scale(0.96)" }, "100%": { opacity: "1", transform: "scale(1)" } },
         "pulse-soft": { "0%,100%": { opacity: "1" }, "50%": { opacity: "0.7" } },
-        "pulse-glow": {
-          "0%,100%": { boxShadow: "0 0 0 0 hsl(var(--accent) / 0.4)" },
-          "50%": { boxShadow: "0 0 0 12px hsl(var(--accent) / 0)" },
+        "spark-pulse": {
+          "0%,100%": { boxShadow: "0 0 0 0 hsl(var(--spark) / 0.5)", transform: "scale(1)" },
+          "50%": { boxShadow: "0 0 0 14px hsl(var(--spark) / 0)", transform: "scale(1.04)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
@@ -99,7 +117,8 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
         "pulse-soft": "pulse-soft 2.4s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 2s ease-out infinite",
+        "spark-pulse": "spark-pulse 2.4s ease-out infinite",
+        shimmer: "shimmer 2s linear infinite",
       },
     },
   },
