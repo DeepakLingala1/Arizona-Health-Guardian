@@ -14,6 +14,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   const { t, locale, setLocale } = useLocale();
   const location = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const NAV = [
     { to: "/", label: t("nav.home"), icon: Home },
