@@ -17,17 +17,27 @@ const SEV_COLOR: Record<string, string> = {
   low: "risk-low", moderate: "risk-moderate", elevated: "risk-elevated", high: "risk-high",
 };
 
+interface LogEntry {
+  id: string;
+  alert_id: string | null;
+  actor: string | null;
+  action: string;
+  before: any;
+  after: any;
+  created_at: string;
+}
+
 export default function ReviewQueue() {
   const { profile, user } = useAuth();
   const { t, locale } = useLocale();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [editing, setEditing] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
 
   const isAnalyst = profile?.role === "analyst";
 
@@ -36,6 +46,13 @@ export default function ReviewQueue() {
     if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
     setAlerts((data as any) ?? []);
+
+    const { data: logRows } = await supabase
+      .from("review_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setLogs((logRows as any) ?? []);
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter]);
@@ -219,7 +236,7 @@ export default function ReviewQueue() {
                           <button
                             onClick={() => setEditing(null)}
                             className="text-sm text-muted-foreground hover:text-foreground ml-auto"
-                          >Cancel</button>
+                          >{t("common.cancel")}</button>
                         )}
                       </div>
                     </>
@@ -237,6 +254,71 @@ export default function ReviewQueue() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* HITL audit log */}
+      <section className="card-elevated p-5 mt-6">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <History className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+              {locale === "es" ? "Registro de auditoría" : "Audit log"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {locale === "es" ? "Últimas 20 acciones de revisión humana." : "Last 20 human-in-the-loop review actions."}
+            </div>
+          </div>
+        </div>
+        {logs.length === 0 ? (
+          <div className="text-sm text-muted-foreground italic">
+            {locale === "es" ? "Sin acciones registradas todavía." : "No actions logged yet."}
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {logs.map((l) => {
+              const beforeT = (l.before as any)?.title;
+              const afterT = (l.after as any)?.title;
+              const titleChanged = l.action === "edit" && beforeT && afterT && beforeT !== afterT;
+              const actionColor =
+                l.action === "approve" ? "risk-low"
+                : l.action === "reject" ? "risk-high"
+                : "spark";
+              return (
+                <div key={l.id} className="py-3 flex items-start gap-3 text-sm">
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded mt-0.5 shrink-0"
+                    style={{
+                      backgroundColor: `hsl(var(--${actionColor}) / 0.15)`,
+                      color: `hsl(var(--${actionColor}))`,
+                    }}
+                  >
+                    {l.action}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {afterT ?? beforeT ?? l.alert_id?.slice(0, 8) ?? "—"}
+                    </div>
+                    {titleChanged && (
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                        <span className="line-through opacity-70">{beforeT}</span>
+                        <span className="mx-1.5">→</span>
+                        <span>{afterT}</span>
+                      </div>
+                    )}
+                    <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2">
+                      <span>{new Date(l.created_at).toLocaleString()}</span>
+                      {l.actor && (
+                        <span className="font-mono">· {l.actor.slice(0, 8)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
