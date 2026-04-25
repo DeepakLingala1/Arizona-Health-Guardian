@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Activity, Home, ClipboardCheck, Map, Sparkles, MoreHorizontal, Moon, Sun, Flame, FileText, Database, ShieldCheck, Beaker, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -13,6 +14,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   const { t, locale, setLocale } = useLocale();
   const location = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const NAV = [
     { to: "/", label: t("nav.home"), icon: Home },
@@ -122,6 +124,54 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {label}
             </NavLink>
           ))}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetTrigger asChild>
+              <button
+                className={cn(
+                  "flex flex-col items-center gap-0.5 py-2 rounded-xl transition-colors text-[10px] font-medium",
+                  MORE.some((m) => m.to === location.pathname) ? "text-primary" : "text-muted-foreground"
+                )}
+                aria-label={t("nav.more")}
+              >
+                <MoreHorizontal className="w-5 h-5" />
+                {t("nav.more")}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl border-t border-border">
+              <SheetHeader>
+                <SheetTitle className="text-left">{t("nav.more")}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {MORE.map(({ to, label, icon: Icon }) => (
+                  <SheetClose asChild key={to}>
+                    <NavLink
+                      to={to}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-3 p-4 rounded-xl border border-border transition-colors",
+                          isActive
+                            ? "bg-secondary border-primary/30 text-primary"
+                            : "hover:bg-secondary text-foreground"
+                        )
+                      }
+                    >
+                      <Icon className="w-5 h-5 text-primary shrink-0" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </NavLink>
+                  </SheetClose>
+                ))}
+              </div>
+              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+                <button
+                  onClick={() => setLocale(locale === "en" ? "es" : "en")}
+                  className="px-3 py-2 rounded-lg border border-border text-xs font-medium uppercase tracking-wider"
+                >
+                  {locale === "en" ? "Español" : "English"}
+                </button>
+                <span className="text-[10px] text-muted-foreground">Spark AZ — Synthetic data prototype</span>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </nav>
     </div>
