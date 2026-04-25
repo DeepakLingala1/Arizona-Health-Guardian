@@ -15,6 +15,9 @@ import MapPage from "./pages/MapPage";
 import Insights from "./pages/Insights";
 import Simulator from "./pages/Simulator";
 import Profile from "./pages/Profile";
+import ReviewQueue from "./pages/ReviewQueue";
+import ModelCard from "./pages/ModelCard";
+import DataSources from "./pages/DataSources";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -51,6 +54,9 @@ const App = () => (
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/insights" element={<Insights />} />
                   <Route path="/simulator" element={<Simulator />} />
+                  <Route path="/review" element={<ReviewQueue />} />
+                  <Route path="/model-card" element={<ModelCard />} />
+                  <Route path="/data-sources" element={<DataSources />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

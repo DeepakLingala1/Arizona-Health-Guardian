@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Activity, Home, ClipboardCheck, Map, Sparkles, MoreHorizontal, Moon, Sun, Flame } from "lucide-react";
+import { Activity, Home, ClipboardCheck, Map, Sparkles, MoreHorizontal, Moon, Sun, Flame, FileText, Database, ShieldCheck, Beaker, User } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/lib/i18n";
@@ -18,7 +19,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
     { to: "/checkin", label: t("nav.checkin"), icon: ClipboardCheck },
     { to: "/map", label: t("nav.map"), icon: Map },
     { to: "/insights", label: t("nav.insights"), icon: Sparkles },
-    { to: "/profile", label: t("nav.more"), icon: MoreHorizontal },
+  ];
+  const MORE = [
+    { to: "/simulator", label: t("nav.simulator"), icon: Beaker },
+    { to: "/review", label: t("nav.review"), icon: ShieldCheck },
+    { to: "/model-card", label: t("nav.modelCard"), icon: FileText },
+    { to: "/data-sources", label: t("nav.dataSources"), icon: Database },
+    { to: "/profile", label: t("nav.profile"), icon: User },
   ];
 
   return (
@@ -55,6 +62,20 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 )}
               </NavLink>
             ))}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-2">
+                <MoreHorizontal className="w-4 h-4" />{t("nav.more")}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {MORE.map(({ to, label, icon: Icon }) => (
+                  <DropdownMenuItem key={to} asChild>
+                    <NavLink to={to} className="flex items-center gap-2 cursor-pointer">
+                      <Icon className="w-4 h-4 text-primary" />{label}
+                    </NavLink>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           <div className="flex items-center gap-2">

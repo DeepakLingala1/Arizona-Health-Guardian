@@ -9,6 +9,10 @@ interface Profile {
   home_county: string;
   streak: number;
   last_checkin_date: string | null;
+  persona: string;
+  language: string;
+  role: string;
+  onboarded: boolean;
 }
 
 interface AuthContextValue {
