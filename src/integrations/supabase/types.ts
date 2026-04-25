@@ -14,7 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_insights: {
+        Row: {
+          drivers: Json | null
+          generated_at: string | null
+          id: string
+          insight: string | null
+          recommendations: Json | null
+          scope: string
+          scope_id: string
+        }
+        Insert: {
+          drivers?: Json | null
+          generated_at?: string | null
+          id?: string
+          insight?: string | null
+          recommendations?: Json | null
+          scope: string
+          scope_id: string
+        }
+        Update: {
+          drivers?: Json | null
+          generated_at?: string | null
+          id?: string
+          insight?: string | null
+          recommendations?: Json | null
+          scope?: string
+          scope_id?: string
+        }
+        Relationships: []
+      }
+      checkins: {
+        Row: {
+          county: string
+          created_at: string | null
+          id: string
+          known_exposure: boolean | null
+          mood: number | null
+          recent_travel: boolean | null
+          risk_score: number | null
+          symptoms: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          county: string
+          created_at?: string | null
+          id?: string
+          known_exposure?: boolean | null
+          mood?: number | null
+          recent_travel?: boolean | null
+          risk_score?: number | null
+          symptoms?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          county?: string
+          created_at?: string | null
+          id?: string
+          known_exposure?: boolean | null
+          mood?: number | null
+          recent_travel?: boolean | null
+          risk_score?: number | null
+          symptoms?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      county_daily: {
+        Row: {
+          aggregate_risk: number | null
+          air_quality: Json | null
+          checkin_count: number | null
+          clusters: Json | null
+          county: string
+          date: string
+          top_symptoms: Json | null
+          updated_at: string | null
+          weather: Json | null
+        }
+        Insert: {
+          aggregate_risk?: number | null
+          air_quality?: Json | null
+          checkin_count?: number | null
+          clusters?: Json | null
+          county: string
+          date: string
+          top_symptoms?: Json | null
+          updated_at?: string | null
+          weather?: Json | null
+        }
+        Update: {
+          aggregate_risk?: number | null
+          air_quality?: Json | null
+          checkin_count?: number | null
+          clusters?: Json | null
+          county?: string
+          date?: string
+          top_symptoms?: Json | null
+          updated_at?: string | null
+          weather?: Json | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age_band: string | null
+          conditions: string[] | null
+          created_at: string | null
+          home_county: string | null
+          id: string
+          last_checkin_date: string | null
+          streak: number | null
+        }
+        Insert: {
+          age_band?: string | null
+          conditions?: string[] | null
+          created_at?: string | null
+          home_county?: string | null
+          id: string
+          last_checkin_date?: string | null
+          streak?: number | null
+        }
+        Update: {
+          age_band?: string | null
+          conditions?: string[] | null
+          created_at?: string | null
+          home_county?: string | null
+          id?: string
+          last_checkin_date?: string | null
+          streak?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
