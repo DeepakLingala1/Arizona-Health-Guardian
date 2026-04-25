@@ -17,17 +17,27 @@ const SEV_COLOR: Record<string, string> = {
   low: "risk-low", moderate: "risk-moderate", elevated: "risk-elevated", high: "risk-high",
 };
 
+interface LogEntry {
+  id: string;
+  alert_id: string | null;
+  actor: string | null;
+  action: string;
+  before: any;
+  after: any;
+  created_at: string;
+}
+
 export default function ReviewQueue() {
   const { profile, user } = useAuth();
   const { t, locale } = useLocale();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [editing, setEditing] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
 
   const isAnalyst = profile?.role === "analyst";
 
@@ -36,6 +46,13 @@ export default function ReviewQueue() {
     if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
     setAlerts((data as any) ?? []);
+
+    const { data: logRows } = await supabase
+      .from("review_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setLogs((logRows as any) ?? []);
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter]);
