@@ -1,1 +1,8 @@
-project_id = "gjilxfsdkhnrpoksxlgt"
+[functions.seed-demo]
+verify_jwt = false
+
+[functions.compute-county-aggregate]
+verify_jwt = false
+
+[functions.generate-insight]
+verify_jwt = false
