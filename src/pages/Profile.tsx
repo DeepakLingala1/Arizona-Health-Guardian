@@ -167,6 +167,31 @@ export default function Profile() {
         </button>
       </div>
 
+      {/* Demo controls */}
+      <div className="card-elevated p-5 border-2 border-dashed border-spark/30 bg-spark/5">
+        <div className="flex items-center gap-2 mb-2">
+          <RefreshCw className="w-4 h-4 text-spark" />
+          <div className="text-xs uppercase tracking-widest text-spark font-bold">
+            {locale === "es" ? "Controles de demo" : "Demo controls"}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          {locale === "es"
+            ? "Borra todos los reportes, alertas y registros, luego vuelve a sembrar los datos sintéticos para los 4 escenarios."
+            : "Wipes all check-ins, alerts and logs, then reseeds the synthetic dataset for the 4 demo scenarios."}
+        </p>
+        <button
+          onClick={resetDemo}
+          disabled={reseeding}
+          className="px-4 py-2 rounded-lg bg-spark text-spark-foreground font-semibold text-sm hover:bg-spark/90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${reseeding ? "animate-spin" : ""}`} />
+          {reseeding
+            ? (locale === "es" ? "Restableciendo…" : "Resetting…")
+            : (locale === "es" ? "Restablecer datos de demo" : "Reset demo data")}
+        </button>
+      </div>
+
       <div className="pt-4 text-xs text-muted-foreground text-center">
         {locale === "es" ? "ID anónimo:" : "Anonymous ID:"} <code className="font-mono">{user?.id?.slice(0, 8)}…</code>
       </div>
