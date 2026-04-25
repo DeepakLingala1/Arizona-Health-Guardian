@@ -90,8 +90,8 @@ Deno.serve(async (req) => {
   const supa = createClient(url, key);
 
   const today = new Date().toISOString().slice(0, 10);
-  // 7-day window so demo seeded data (spread across 14 days) and slow-trickle real data both surface
-  const since = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+  // 14-day rolling window — captures full seeded demo + slow real-world signal accumulation
+  const since = new Date(Date.now() - 14*24*60*60*1000).toISOString();
 
   for (const county of COUNTIES) {
     const { data: rows } = await supa
