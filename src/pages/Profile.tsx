@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COUNTY_NAMES } from "@/lib/azCounties";
 import { PERSONAS, PersonaId, getPersona } from "@/lib/personas";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, ClipboardCheck, FileText, Database, Users } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, FileText, Database, Users, RefreshCw } from "lucide-react";
 
 const CONDITIONS = [
   { id: "asthma", en: "Asthma", es: "Asma" },
@@ -26,6 +26,33 @@ export default function Profile() {
   const [county, setCounty] = useState<string>(profile?.home_county ?? "Pima");
   const [conditions, setConditions] = useState<string[]>(profile?.conditions ?? []);
   const [busy, setBusy] = useState(false);
+  const [reseeding, setReseeding] = useState(false);
+
+  async function resetDemo() {
+    if (!confirm(locale === "es"
+      ? "¿Borrar datos de demo y volver a sembrar? Esto puede tardar 10–20 segundos."
+      : "Wipe demo data and reseed? This may take 10–20 seconds.")) return;
+    setReseeding(true);
+    try {
+      // Wipe checkins, county_daily, alerts, review_log, ai_insights cache
+      await supabase.from("review_log").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("alerts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("ai_insights").delete().neq("scope_id", "");
+      await supabase.from("county_daily").delete().neq("county", "");
+      await supabase.from("checkins").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      toast.message(locale === "es" ? "Sembrando datos…" : "Reseeding demo data…");
+      await supabase.functions.invoke("seed-demo");
+      toast.message(locale === "es" ? "Calculando agregados…" : "Computing aggregates…");
+      await supabase.functions.invoke("compute-county-aggregate", { body: {} });
+      await supabase.functions.invoke("evaluate-alerts", { body: {} });
+      toast.success(locale === "es" ? "Demo restablecida" : "Demo reset complete");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Reset failed");
+    } finally {
+      setReseeding(false);
+    }
+  }
 
   async function save() {
     if (!user) return;
