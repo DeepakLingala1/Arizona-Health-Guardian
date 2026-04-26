@@ -19,11 +19,9 @@ const MapPage = lazy(() => import("./pages/MapPage"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Simulator = lazy(() => import("./pages/Simulator"));
 const Profile = lazy(() => import("./pages/Profile"));
-const ReviewQueue = lazy(() => import("./pages/ReviewQueue"));
-const ModelCard = lazy(() => import("./pages/ModelCard"));
+const AdminConsole = lazy(() => import("./pages/AdminConsole"));
 const DataSources = lazy(() => import("./pages/DataSources"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Roadmap = lazy(() => import("./pages/Roadmap"));
 const Playbook = lazy(() => import("./pages/Playbook"));
 
 const queryClient = new QueryClient({
@@ -47,7 +45,7 @@ function SeedBootstrap() {
 
 // Routes a user can visit even before completing onboarding (public marketing pages + the wizard itself).
 const PRE_ONBOARD_ALLOWED = new Set([
-  "/onboarding", "/model-card", "/data-sources", "/playbook", "/roadmap",
+  "/onboarding", "/data-sources", "/playbook",
 ]);
 
 function OnboardingGate({ children }: { children: ReactNode }) {
@@ -55,6 +53,7 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   const location = useLocation();
   if (loading || !profile) return <>{children}</>;
   if (profile.onboarded) return <>{children}</>;
+  if (location.pathname === "/review" || location.pathname === "/admin" || location.pathname.startsWith("/admin/")) return <>{children}</>;
   if (PRE_ONBOARD_ALLOWED.has(location.pathname)) return <>{children}</>;
   return <Navigate to="/onboarding" replace />;
 }
@@ -67,10 +66,22 @@ function GlobalCommandPalette() {
 
 function RouteFallback() {
   return (
-    <div className="container max-w-[1200px] py-12 space-y-4 animate-pulse">
-      <div className="h-7 bg-muted rounded w-1/3" />
-      <div className="h-4 bg-muted rounded w-2/3" />
-      <div className="h-64 bg-muted rounded-2xl" />
+    <div className="container max-w-[1200px] py-10">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-card overflow-hidden">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-muted animate-pulse" />
+          <div className="space-y-2 flex-1">
+            <div className="h-4 bg-muted rounded w-44 animate-pulse" />
+            <div className="h-3 bg-muted rounded w-72 max-w-full animate-pulse" />
+          </div>
+        </div>
+        <div className="grid md:grid-cols-3 gap-3 mt-6">
+          <div className="h-28 bg-muted rounded-xl animate-pulse" />
+          <div className="h-28 bg-muted rounded-xl animate-pulse" />
+          <div className="h-28 bg-muted rounded-xl animate-pulse" />
+        </div>
+        <div className="h-48 bg-muted rounded-xl mt-3 animate-pulse" />
+      </div>
     </div>
   );
 }
@@ -96,10 +107,10 @@ const App = () => (
                       <Route path="/map" element={<MapPage />} />
                       <Route path="/insights" element={<Insights />} />
                       <Route path="/simulator" element={<Simulator />} />
-                      <Route path="/review" element={<ReviewQueue />} />
+                      <Route path="/admin" element={<AdminConsole />} />
+                      <Route path="/admin/review" element={<Navigate to="/admin" replace />} />
+                      <Route path="/review" element={<Navigate to="/admin" replace />} />
                       <Route path="/playbook" element={<Playbook />} />
-                      <Route path="/roadmap" element={<Roadmap />} />
-                      <Route path="/model-card" element={<ModelCard />} />
                       <Route path="/data-sources" element={<DataSources />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="*" element={<NotFound />} />

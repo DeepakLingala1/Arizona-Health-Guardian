@@ -2,8 +2,8 @@
 import { useEffect, useState, useCallback, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Home, ClipboardCheck, Map as MapIcon, Sparkles, Beaker, ShieldCheck, FileText, Database,
-  User, Rocket, MapPin, Sun, Moon, Languages, Flame, Activity, LogOut,
+  Home, ClipboardCheck, Map as MapIcon, Sparkles, Beaker, ShieldCheck, Database,
+  User, MapPin, Sun, Moon, Languages, Flame, Activity, LogOut,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -27,10 +27,8 @@ const PAGES: PageEntry[] = [
   { to: "/map", labelKey: "nav.map", Icon: MapIcon, shortcut: "G M" },
   { to: "/insights", labelKey: "nav.insights", Icon: Sparkles, shortcut: "G I" },
   { to: "/simulator", labelKey: "nav.simulator", Icon: Beaker },
-  { to: "/review", labelKey: "nav.review", Icon: ShieldCheck },
+  { to: "/admin", labelKey: "nav.admin", Icon: ShieldCheck },
   { to: "/playbook", labelKey: "nav.playbook", Icon: MapPin },
-  { to: "/roadmap", labelKey: "nav.roadmap", Icon: Rocket },
-  { to: "/model-card", labelKey: "nav.modelCard", Icon: FileText },
   { to: "/data-sources", labelKey: "nav.dataSources", Icon: Database },
   { to: "/profile", labelKey: "nav.profile", Icon: User },
 ];

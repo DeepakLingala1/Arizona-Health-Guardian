@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COUNTY_NAMES } from "@/lib/azCounties";
 import { PERSONAS, PersonaId, getPersona } from "@/lib/personas";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, ClipboardCheck, FileText, Database, Users, RefreshCw, Rocket, Map as MapIcon, LogOut } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, Database, Users, RefreshCw, Map as MapIcon, LogOut } from "lucide-react";
 
 const CONDITIONS = [
   { id: "asthma", en: "Asthma", es: "Asma" },
@@ -27,7 +27,7 @@ export default function Profile() {
     await signOut();
   }
 
-  const [persona, setPersona] = useState<PersonaId>(((profile as any)?.persona ?? "urban"));
+  const [persona, setPersona] = useState<PersonaId>((profile?.persona as PersonaId | undefined) ?? "urban");
   const [county, setCounty] = useState<string>(profile?.home_county ?? "Pima");
   const [conditions, setConditions] = useState<string[]>(profile?.conditions ?? []);
   const [busy, setBusy] = useState(false);
@@ -51,9 +51,9 @@ export default function Profile() {
       await supabase.functions.invoke("compute-county-aggregate", { body: {} });
       await supabase.functions.invoke("evaluate-alerts", { body: {} });
       toast.success(locale === "es" ? "Demo restablecida" : "Demo reset complete");
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message ?? "Reset failed");
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Reset failed");
     } finally {
       setReseeding(false);
     }
@@ -157,14 +157,10 @@ export default function Profile() {
           <ClipboardCheck className="w-5 h-5 text-primary mb-2" />
           <div className="font-semibold">{t("nav.checkin")}</div>
         </button>
-        <button onClick={() => navigate("/review")} className="card-elevated p-4 text-left hover:shadow-glow">
+        <button onClick={() => navigate("/admin")} className="card-elevated p-4 text-left hover:shadow-glow">
           <ShieldCheck className="w-5 h-5 text-primary mb-2" />
-          <div className="font-semibold">{t("nav.review")}</div>
+          <div className="font-semibold">{t("nav.admin")}</div>
           <div className="text-xs text-muted-foreground">Analyst HITL</div>
-        </button>
-        <button onClick={() => navigate("/model-card")} className="card-elevated p-4 text-left hover:shadow-glow">
-          <FileText className="w-5 h-5 text-primary mb-2" />
-          <div className="font-semibold">{t("nav.modelCard")}</div>
         </button>
         <button onClick={() => navigate("/data-sources")} className="card-elevated p-4 text-left hover:shadow-glow">
           <Database className="w-5 h-5 text-primary mb-2" />
@@ -173,10 +169,6 @@ export default function Profile() {
         <button onClick={() => navigate("/playbook")} className="card-elevated p-4 text-left hover:shadow-glow">
           <MapIcon className="w-5 h-5 text-primary mb-2" />
           <div className="font-semibold">{t("nav.playbook")}</div>
-        </button>
-        <button onClick={() => navigate("/roadmap")} className="card-elevated p-4 text-left hover:shadow-glow">
-          <Rocket className="w-5 h-5 text-primary mb-2" />
-          <div className="font-semibold">{t("nav.roadmap")}</div>
         </button>
       </div>
 

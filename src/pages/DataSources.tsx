@@ -72,7 +72,7 @@ export default function DataSources() {
           {[
             locale === "es" ? "Cero APIs pagas. Cero claves de usuario." : "Zero paid APIs. Zero user-supplied keys.",
             locale === "es" ? "Sin PII. Identidad anónima generada por el sistema." : "No PII collected. System-generated anonymous identity.",
-            locale === "es" ? "Cada lectura IA cita su contexto y enlaza con la Ficha del modelo." : "Every AI insight cites its context and links back to the Model Card.",
+            locale === "es" ? "Cada lectura IA cita su contexto; la metodología completa vive en el brief de socios." : "Every AI insight cites its context; full methodology lives in the partner brief.",
             locale === "es" ? "Las alertas requieren aprobación humana antes de su publicación." : "Alerts require human approval before publication.",
           ].map((t, i) => (
             <li key={i} className="flex gap-2"><span className="text-primary">▸</span>{t}</li>

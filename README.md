@@ -10,21 +10,21 @@ The name Spark AZ means spotting the first "spark" of a health threat in Arizona
 
 **Problem:** Arizona's outbreak signals are fragmented across people, animals, climate, travel, and local observations. By the time a signal becomes an official case count, the window for low-cost action may already be closing.
 
-**Solution:** Spark AZ gives residents a fast anonymous check-in, turns those reports into county-level One Health risk scores, explains the top drivers, and routes AI-drafted alerts through a human analyst review queue before anything goes public.
+**Solution:** Spark AZ gives residents a fast anonymous check-in, turns those reports into county-level One Health risk scores, explains the top drivers, and routes AI-drafted alerts through a protected admin console before anything goes public.
 
 **Why now:** Climate volatility, cross-border travel, vector pressure, wildfire smoke, Valley Fever, West Nile, Hantavirus, and respiratory clusters increasingly overlap in Arizona. Open data, Supabase edge functions, and low-cost AI now make a real-time participatory early-warning layer feasible.
 
-**Who uses it:** Residents, clinicians, ranchers, wildlife observers, travelers, county health departments, tribal health partners, and public-health analysts.
+**Who uses it:** Residents, clinicians, ranchers, wildlife observers, travelers, county health departments, tribal health partners, and public-health analysts. The main app is shared for residents and analysts, while analyst-only review actions live in the Admin Console.
 
 **What makes it different:** It is not a generic symptom tracker. It fuses human, animal, vector, environmental, travel, and community pressure into one explainable score, with bilingual EN/ES UX and human-in-the-loop alert governance.
 
 ## Why This Project Scores Strongly
 
 - **Clear public-health need:** earlier detection for Arizona-specific threats across urban, rural, border, and tribal contexts
-- **Full working product:** resident check-in, dashboard, map, insights, review queue, model card, data sources, roadmap, and playbook
+- **Full working product:** resident check-in, dashboard, map, insights, protected admin console, analyst review queue, data sources, and Arizona playbook
 - **Explainable scoring:** transparent 0-100 risk score with human, animal, vector, environmental, community, and persona-driven inputs
 - **Responsible AI workflow:** AI can draft insights and alerts, but public-facing alerts require human analyst review
-- **Real deployment path:** Supabase backend, edge functions, audit logs, seed data, and a roadmap toward county pilots and live integrations
+- **Real deployment path:** Supabase backend, edge functions, audit logs, seed data, and a partner-facing roadmap/model-card brief toward county pilots and live integrations
 - **Equity by design:** bilingual EN/ES interface, anonymous reporting, mobile-first UX, and coverage for all 15 Arizona counties
 
 ## The Risk Score
@@ -55,13 +55,24 @@ Every score exposes driver bars so the user can see why the number moved.
 - Arizona county choropleth map using county-level risk layers
 - AI insight cards backed by Supabase edge functions
 - Explainability panel with weighted risk drivers
-- Human-in-the-loop analyst review queue for AI-generated alerts
+- Protected Admin Console for analyst-only alert review
+- Human-in-the-loop review queue for AI-generated alerts
 - Review audit log for approve, edit, and reject actions
 - CSV export for alert and review activity
-- Model card, data sources page, Arizona playbook, and roadmap
+- Data sources page and Arizona playbook inside the app
+- Model card, system architecture, rubric coverage, and roadmap moved into a short partner/judge brief
 - Bilingual English and Spanish interface
 - Synthetic seed demo covering all 15 Arizona counties
 - Scenario coverage for West Nile, Hantavirus, dengue travel import, dust/heat, and respiratory clusters
+
+## Live Demo And Presentation Materials
+
+- **Live app:** https://arizona-health-guardian.vercel.app
+- **Admin console route:** `/admin`
+- **Roadmap + Model Card Canva deck:** https://www.canva.com/d/GEhyQJ4bYtgEW-U
+- **Editable Canva deck:** https://www.canva.com/d/nBrqLoZsxre19kU
+
+The Roadmap and Model Card were intentionally removed from top-level app navigation. In a production-style product, residents and analysts see workflow features first; model transparency, rubric alignment, system architecture, limitations, and future roadmap are packaged as partner/judge materials instead.
 
 ## Arizona Use Cases
 
@@ -95,7 +106,7 @@ src/
   components/                     Dashboard, layout, risk, chart, XAI, and UI components
   contexts/                       Auth and theme providers
   lib/                            Risk score, personas, i18n, explainability, scenarios
-  pages/                          Dashboard, check-in, map, insights, review, model card
+  pages/                          Dashboard, check-in, map, insights, admin, data sources, playbook, profile
   integrations/supabase/          Generated Supabase client and types
   test/                           Vitest setup and examples
 
@@ -109,6 +120,7 @@ supabase/
     review-action/                Human review workflow and audit logging
     fetch-environment/            Open-Meteo weather and air quality
     fetch-travel-imports/         OpenSky travel-import signal join
+
 ```
 
 ## Run Locally
@@ -144,16 +156,6 @@ Do not commit service-role keys or real health data. This prototype is designed 
 
 Spark AZ does not publish AI-generated alerts directly. Alerts are created in a pending state and must be approved, edited, or rejected by a public-health analyst. Each action is written to `review_log` with before/after context.
 
-## Roadmap
-
-- Pilot in Pima and Maricopa with county analyst desks
-- Add push, email, and SMS for approved high-severity alerts
-- Replace demo EpiCore-style feed with live webhook ingestion
-- Add native mobile shells and SMS fallback for low-bandwidth areas
-- Calibrate model weights against documented outbreaks
-- Publish open CSV / GeoJSON APIs for approved aggregate signals
-- Expand to tribal, border, and multi-state surveillance partnerships
-
 ## Status
 
 Built for the University of Arizona Ending Pandemics Academy "Spot the Spark" Challenge, May 2026.
@@ -165,10 +167,10 @@ This section maps the challenge's weighted judging rubric to the project evidenc
 | Rubric scoring point | Weight | How Arizona Health Guardian fulfills it |
 | --- | ---: | --- |
 | **Impact and relevance to the problem** | **30%** | Directly addresses the challenge goal: turning self-reported human, animal, and environmental signals into individual and county-level risk profiles for emerging infectious disease threats. The app is Arizona-specific, covers all 15 counties, and includes concrete scenarios for West Nile, Hantavirus, dengue travel import, dust/heat, and respiratory clusters. |
-| **Feasibility and clarity of approach** | **20%** | Uses a clear architecture: anonymous check-ins flow into Supabase, edge functions aggregate county signals, a deterministic 0-100 model generates risk bands, and AI-generated alerts enter a human analyst review queue. The model card, data sources page, architecture diagram, and roadmap make the approach understandable and deployable. |
+| **Feasibility and clarity of approach** | **20%** | Uses a clear architecture: anonymous check-ins flow into Supabase, edge functions aggregate county signals, a deterministic 0-100 model generates risk bands, and AI-generated alerts enter a human analyst review queue. The data sources page plus the external Roadmap + Model Card brief make the approach understandable and deployable. |
 | **Technical execution and innovation** | **25%** | Implements a working React/Vite application with Supabase database schema, migrations, edge functions, seeded demo data, county map, risk dashboard, AI insight generation, k-means-style cluster detection, travel-import context, trend charts, CSV export, and audit logging. Innovation comes from fusing One Health signals with explainable AI and human-in-the-loop alert governance. |
 | **Usability and user experience** | **15%** | Provides a mobile-first, bilingual EN/ES experience with a fast check-in flow, persona-aware onboarding, dashboard risk ring, map drill-downs, command palette, clear risk bands, and analyst review tools. The design supports both regular public reporting and public-health analyst workflows. |
-| **Presentation and demo quality** | **10%** | Includes seeded synthetic data for a live demo, named Arizona scenarios, a model card, data source documentation, an Arizona playbook, a future roadmap, and this README as a technical and product overview. The prototype can be demonstrated end-to-end from resident report to risk score to analyst-reviewed alert. |
+| **Presentation and demo quality** | **10%** | Includes seeded synthetic data for a live demo, named Arizona scenarios, data source documentation, an Arizona playbook, a combined Roadmap + Model Card brief, and this README as a technical and product overview. The prototype can be demonstrated end-to-end from resident report to risk score to analyst-reviewed alert. |
 
 ## Challenge Requirement Coverage
 
@@ -177,7 +179,7 @@ This section maps the challenge's weighted judging rubric to the project evidenc
 | **Interfaces and engagement strategies for Arizona users** | Persona-aware onboarding, resident check-in flow, bilingual UI, mobile-first layout, dashboard feedback, map views, and tailored risk explanations are designed to attract and retain regular reporting. |
 | **AI/ML incorporation** | Gemini-powered insight generation supports risk narratives and alert drafting. The system also uses clustering to surface county-level signal patterns from self-reported symptoms and concerns. |
 | **How the tool would be used in Arizona** | The Arizona playbook describes real use cases for Maricopa, Apache/Navajo, Yuma/Santa Cruz, Pinal, and Pima contexts, including county, tribal, border, vector, and respiratory workflows. |
-| **Model card for performance and explainability** | The app includes a Model Card page explaining model purpose, inputs, scoring logic, limitations, governance, planned metrics, and rubric alignment. |
+| **Model card for performance and explainability** | The combined Roadmap + Model Card brief explains model purpose, inputs, scoring logic, system architecture, limitations, governance, planned metrics, and rubric alignment. It is kept outside the daily app workflow so the product UI stays focused on reporting and analyst response. |
 | **No private health data required** | The prototype is anonymous, no-PII by design, and intended for synthetic data unless deployed under appropriate public-health and privacy review. |
 | **Preferred open/public data sources** | Uses or is prepared for Open-Meteo, OpenSky, county GeoJSON, CDC/ADHS-style reference context, EpiCore-style signals, and future EpiCore API integration. |
-| **Required deliverables** | Supports a live demo, short solution summary, technical architecture, model card, human-in-the-loop workflow, and future roadmap. |
+| **Required deliverables** | Supports a live demo, short solution summary, technical architecture, model card, human-in-the-loop workflow, future roadmap, and presentation materials. |

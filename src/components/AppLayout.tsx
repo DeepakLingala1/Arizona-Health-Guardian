@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity, Home, ClipboardCheck, Map, Sparkles, MoreHorizontal, Moon, Sun, Flame,
-  FileText, Database, ShieldCheck, Beaker, User, Search, Rocket, MapPin, LogOut,
+  Database, ShieldCheck, Beaker, User, Search, MapPin, LogOut,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/lib/i18n";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ReactNode, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const isAnalyst = profile?.role === "analyst";
 
   async function handleSignOut() {
     if (typeof window !== "undefined" && !window.confirm(t("auth.signOutConfirm"))) return;
@@ -46,15 +48,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
   ];
   const MORE = [
     { to: "/simulator", label: t("nav.simulator"), icon: Beaker },
-    { to: "/review", label: t("nav.review"), icon: ShieldCheck },
+    { to: "/admin", label: t("nav.admin"), icon: ShieldCheck },
     { to: "/playbook", label: t("nav.playbook"), icon: MapPin },
-    { to: "/roadmap", label: t("nav.roadmap"), icon: Rocket },
-    { to: "/model-card", label: t("nav.modelCard"), icon: FileText },
     { to: "/data-sources", label: t("nav.dataSources"), icon: Database },
     { to: "/profile", label: t("nav.profile"), icon: User },
   ];
 
   const isOnboarding = location.pathname === "/onboarding";
+  const isMoreActive = MORE.some((m) => m.to === location.pathname) || location.pathname.startsWith("/admin");
 
   function openCommandPalette() {
     // Synthesize a ⌘K event so the global hotkey listener (in App.tsx) opens the palette.
@@ -87,13 +88,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {NAV.map(({ to, label, icon: Icon }) => (
                 <NavLink key={to} to={to}
                   className={({ isActive }) => cn(
-                    "relative px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2",
+                    "relative flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors xl:px-4",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                   {({ isActive }) => (
                     <>
-                      <Icon className="w-4 h-4" aria-hidden="true" />
-                      {label}
+                      <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <span className="whitespace-nowrap leading-none">{label}</span>
                       {isActive && (
                         <motion.span layoutId="active-nav" className="absolute inset-0 bg-secondary rounded-xl -z-10"
                           transition={{ type: "spring", stiffness: 400, damping: 32 }} />
@@ -103,7 +104,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 </NavLink>
               ))}
               <DropdownMenu>
-                <DropdownMenuTrigger className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-2">
+                <DropdownMenuTrigger className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground xl:px-4">
                   <MoreHorizontal className="w-4 h-4" aria-hidden="true" />{t("nav.more")}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -125,7 +126,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={openCommandPalette}
                 aria-label={t("nav.search")}
-                className="hidden md:inline-flex items-center gap-2 h-9 pl-3 pr-2 rounded-xl border border-border bg-card hover:bg-secondary text-xs font-medium text-muted-foreground transition-colors"
+                className="hidden lg:inline-flex items-center gap-2 h-9 pl-3 pr-2 rounded-xl border border-border bg-card hover:bg-secondary text-xs font-medium text-muted-foreground transition-colors"
               >
                 <Search className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="opacity-70">
@@ -138,7 +139,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
             <button
               onClick={() => setLocale(locale === "en" ? "es" : "en")}
-              className="hidden sm:inline-flex h-9 px-3 rounded-xl border border-border hover:bg-secondary text-xs font-medium uppercase tracking-wider"
+              className="hidden sm:inline-flex h-9 min-w-14 items-center justify-center rounded-xl border border-border px-0 text-xs font-semibold uppercase tracking-normal leading-none transition-colors hover:bg-secondary"
               aria-label="Toggle language"
             >
               {locale}
@@ -188,6 +189,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAnalyst && (
+                    <DropdownMenuItem onSelect={() => navigate("/admin")} className="cursor-pointer">
+                      <ShieldCheck className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
+                      {t("nav.admin")}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onSelect={() => navigate("/profile")} className="cursor-pointer">
                     <User className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
                     {t("nav.profile")}
@@ -195,10 +202,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <DropdownMenuItem onSelect={() => navigate("/data-sources")} className="cursor-pointer">
                     <Database className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
                     {t("nav.dataSources")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => navigate("/model-card")} className="cursor-pointer">
-                    <FileText className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
-                    {t("nav.modelCard")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -220,11 +223,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 pb-24 md:pb-12">
-        <AnimatePresence mode="wait">
-          <motion.div key={location.pathname}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}>
+      <main className="flex-1 pb-24 md:pb-12 overflow-x-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            className="min-h-[calc(100vh-8rem)] will-change-transform"
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 14, scale: 0.992, filter: "blur(6px)" }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -8, scale: 0.998, filter: "blur(3px)" }}
+            transition={{ duration: reduceMotion ? 0 : 0.34, ease: [0.22, 1, 0.36, 1] }}
+          >
             {children}
           </motion.div>
         </AnimatePresence>
@@ -252,7 +260,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <button
                   className={cn(
                     "flex flex-col items-center gap-0.5 py-2 rounded-xl transition-colors text-[10px] font-medium",
-                    MORE.some((m) => m.to === location.pathname) ? "text-primary" : "text-muted-foreground"
+                    isMoreActive ? "text-primary" : "text-muted-foreground"
                   )}
                   aria-label={t("nav.more")}
                 >

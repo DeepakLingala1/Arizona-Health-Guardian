@@ -29,8 +29,8 @@ export function XAIPanel({ drivers, title }: { drivers: RiskDriver[]; title?: st
             </TooltipTrigger>
             <TooltipContent className="max-w-xs">
               {locale === "es"
-                ? "Cada barra muestra cuánto contribuye un factor a tu puntuación. Verde reduce, rojo aumenta."
-                : "Each bar shows how much a factor contributes to your score. Green pushes down, red pushes up."}
+                ? "Cada barra muestra cuanto contribuye un factor a tu puntuacion. Las flechas hacia arriba y los valores positivos aumentan la puntuacion; las flechas hacia abajo y los valores negativos la reducen. Los colores indican la categoria de la senal."
+                : "Each bar shows how much a factor contributes to your score. Up arrows and positive values increase the score; down arrows and negative values reduce it. Colors show the signal category."}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -74,8 +74,8 @@ export function XAIPanel({ drivers, title }: { drivers: RiskDriver[]; title?: st
 
         <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
           {locale === "es"
-            ? "Modelo determinístico v0.1. Ver Ficha del modelo para detalles."
-            : "Deterministic model v0.1. See Model Card for full methodology."}
+            ? "Modelo determinístico v0.1. La metodología completa está en el brief de socios."
+            : "Deterministic model v0.1. Full methodology is in the partner brief."}
         </div>
       </div>
     </TooltipProvider>

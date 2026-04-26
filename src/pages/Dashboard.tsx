@@ -300,9 +300,9 @@ export default function Dashboard() {
 
           <div className="mt-auto pt-4 text-xs text-muted-foreground flex items-center gap-1">
             <Globe2 className="w-3 h-3" aria-hidden="true" />
-            {locale === "es" ? "Ver fuentes y método en" : "Sources & method on"}
-            <Link to="/model-card" className="text-primary hover:underline ml-1">
-              {t("nav.modelCard")}
+            {locale === "es" ? "Fuentes y metodo en" : "Sources & method in"}
+            <Link to="/data-sources" className="text-primary hover:underline ml-1">
+              {t("nav.dataSources")}
             </Link>
           </div>
         </div>
