@@ -60,19 +60,13 @@ Every score exposes driver bars so the user can see why the number moved.
 - Review audit log for approve, edit, and reject actions
 - CSV export for alert and review activity
 - Data sources page and Arizona playbook inside the app
-- Model card, system architecture, rubric coverage, and roadmap moved into a short partner/judge brief
 - Bilingual English and Spanish interface
 - Synthetic seed demo covering all 15 Arizona counties
 - Scenario coverage for West Nile, Hantavirus, dengue travel import, dust/heat, and respiratory clusters
 
-## Live Demo And Presentation Materials
+## Live Demo
 
 - **Live app:** https://arizona-health-guardian.vercel.app
-- **Admin console route:** `/admin`
-- **Roadmap + Model Card Canva deck:** https://www.canva.com/d/GEhyQJ4bYtgEW-U
-- **Editable Canva deck:** https://www.canva.com/d/nBrqLoZsxre19kU
-
-The Roadmap and Model Card were intentionally removed from top-level app navigation. In a production-style product, residents and analysts see workflow features first; model transparency, rubric alignment, system architecture, limitations, and future roadmap are packaged as partner/judge materials instead.
 
 ## Arizona Use Cases
 
