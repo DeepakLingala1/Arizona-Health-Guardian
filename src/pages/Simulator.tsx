@@ -88,15 +88,15 @@ export default function Simulator() {
       <div className="card-elevated p-6 space-y-5">
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("sim.origin")}</label>
-            <select value={origin} onChange={(e) => setOrigin(e.target.value)}
+            <label htmlFor="sim-origin" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("sim.origin")}</label>
+            <select id="sim-origin" value={origin} onChange={(e) => setOrigin(e.target.value)}
               className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-muted border border-border focus:border-primary focus:outline-none text-sm font-medium">
               {COUNTY_NAMES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("sim.dest")}</label>
-            <select value={destination} onChange={(e) => setDestination(e.target.value)}
+            <label htmlFor="sim-dest" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("sim.dest")}</label>
+            <select id="sim-dest" value={destination} onChange={(e) => setDestination(e.target.value)}
               className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-muted border border-border focus:border-primary focus:outline-none text-sm font-medium">
               {COUNTY_NAMES.map((c) => <option key={c}>{c}</option>)}
             </select>

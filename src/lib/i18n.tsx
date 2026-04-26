@@ -22,8 +22,11 @@ const en: Dict = {
   "nav.modelCard": "Model card",
   "nav.dataSources": "Data sources",
   "nav.profile": "Profile",
+  "nav.roadmap": "Roadmap",
+  "nav.playbook": "AZ Playbook",
   "nav.more": "More",
   "nav.language": "Language",
+  "nav.search": "Search · ⌘K",
 
   // common
   "common.county": "County",
@@ -128,6 +131,84 @@ const en: Dict = {
 
   // ds
   "ds.title": "Data sources & methodology",
+
+  // onboarding
+  "onb.step": "Step",
+  "onb.of": "of",
+  "onb.next": "Next",
+  "onb.back": "Back",
+  "onb.finish": "Finish setup",
+  "onb.welcomeTitle": "Welcome to Spark AZ",
+  "onb.welcomeBody2": "A One Health early-warning prototype for Arizona. Your anonymous reports — yours, your animals', your environment's — feed a county-level risk score that's reviewed by a public-health analyst before any alert reaches the public.",
+  "onb.privacy.t1": "No PII is collected. Your account is anonymous.",
+  "onb.privacy.t2": "Reports are linked only to a county and an anonymous ID.",
+  "onb.privacy.t3": "Every AI-generated alert is reviewed by a human before publication.",
+  "onb.personaPick": "Pick the role that best fits you",
+  "onb.personaHelp": "We use this to weight what matters most for your daily risk read. You can change it any time in Profile.",
+  "onb.locationTitle": "Where you are, what we should know",
+  "onb.locationHelp": "We use county only — never an exact location.",
+  "onb.ageOptional": "Age range (optional)",
+  "onb.allSet": "You're all set",
+  "onb.allSetBody": "Your daily Spark AZ read is ready. Submit your first check-in to personalize it.",
+  "onb.firstCheckin": "Submit my first check-in",
+  "onb.skipToHome": "Take me to the dashboard",
+
+  // roadmap
+  "rd.title": "Roadmap",
+  "rd.subtitle": "From hackathon prototype to statewide One Health surveillance",
+  "rd.now": "Now (May 2026)",
+  "rd.q3": "Q3 2026 — Pilot",
+  "rd.q4": "Q4 2026 — Partnerships",
+  "rd.q1": "Q1 2027 — Scale",
+  "rd.beyond": "2027+ — Beyond",
+  "rd.metricsTitle": "What we'll measure during pilot",
+  "rd.investTitle": "What it would take to operate at AZ scale",
+
+  // playbook
+  "pb.title": "How Spark AZ works in Arizona",
+  "pb.subtitle": "Three real workflows: county health department, tribal community, border clinic.",
+  "pb.county.title": "Maricopa County Department of Public Health",
+  "pb.tribal.title": "Apache / Navajo tribal community health",
+  "pb.border.title": "Santa Cruz / Yuma border clinic",
+  "pb.day": "Day",
+  "pb.useCaseLabel": "Use case",
+  "pb.outcomeLabel": "Outcome",
+
+  // dashboard additions
+  "home.trend7": "7-day trend",
+  "home.trendEmpty": "Not enough data yet — keep checking in.",
+  "home.contribution": "Your county's contribution",
+  "home.contribReports": "reports today",
+  "home.contribTarget": "target for signal detection",
+  "home.contribAddOne": "Add yours →",
+  "home.realtime.newAlert": "New alert in",
+
+  // review queue
+  "review.export": "Export CSV",
+  "review.exported": "Exported",
+
+  // command palette
+  "cmd.placeholder": "Jump to a county, page, or scenario…",
+  "cmd.empty": "Nothing matches.",
+  "cmd.section.pages": "Pages",
+  "cmd.section.counties": "Arizona counties",
+  "cmd.section.scenarios": "Demo scenarios",
+  "cmd.section.actions": "Actions",
+  "cmd.toggleTheme": "Toggle dark / light theme",
+  "cmd.toggleLocale": "Switch language (EN / ES)",
+  "cmd.runCheckin": "Open the daily check-in",
+
+  // empty states
+  "empty.alerts": "No pending alerts. The system is quiet right now.",
+  "empty.county": "Click a county on the map.",
+  "empty.clusters": "No clusters detected yet — the system is warming up.",
+
+  // auth / account dropdown
+  "auth.account": "Account",
+  "auth.anonId": "Anonymous ID",
+  "auth.signOut": "Sign out",
+  "auth.signOutHint": "Ends this anonymous session and starts a fresh one.",
+  "auth.signOutConfirm": "Sign out and reset this session? Your check-ins will stay in the dataset but will no longer be linked to you.",
 };
 
 const es: Dict = {
@@ -144,8 +225,11 @@ const es: Dict = {
   "nav.modelCard": "Ficha del modelo",
   "nav.dataSources": "Fuentes de datos",
   "nav.profile": "Perfil",
+  "nav.roadmap": "Hoja de ruta",
+  "nav.playbook": "Manual AZ",
   "nav.more": "Más",
   "nav.language": "Idioma",
+  "nav.search": "Buscar · ⌘K",
 
   "common.county": "Condado",
   "common.today": "Hoy",
@@ -239,6 +323,84 @@ const es: Dict = {
   "mc.subtitle": "Modelo de riesgo compuesto Spark AZ v0.1",
 
   "ds.title": "Fuentes de datos y metodología",
+
+  // onboarding
+  "onb.step": "Paso",
+  "onb.of": "de",
+  "onb.next": "Siguiente",
+  "onb.back": "Atrás",
+  "onb.finish": "Terminar configuración",
+  "onb.welcomeTitle": "Bienvenido a Spark AZ",
+  "onb.welcomeBody2": "Un prototipo de alerta temprana Una Salud para Arizona. Tus reportes anónimos — tuyos, de tus animales y de tu entorno — alimentan un puntaje de riesgo a nivel de condado, revisado por un analista de salud pública antes de cualquier alerta.",
+  "onb.privacy.t1": "No se recopila PII. Tu cuenta es anónima.",
+  "onb.privacy.t2": "Los reportes se vinculan solo a un condado y a un ID anónimo.",
+  "onb.privacy.t3": "Cada alerta generada por IA es revisada por una persona antes de publicarse.",
+  "onb.personaPick": "Elige el rol que mejor te describe",
+  "onb.personaHelp": "Lo usamos para ponderar lo que más importa en tu lectura diaria de riesgo. Puedes cambiarlo en cualquier momento desde Perfil.",
+  "onb.locationTitle": "Dónde estás y qué deberíamos saber",
+  "onb.locationHelp": "Usamos solo el condado — nunca tu ubicación exacta.",
+  "onb.ageOptional": "Rango de edad (opcional)",
+  "onb.allSet": "¡Todo listo!",
+  "onb.allSetBody": "Tu lectura diaria Spark AZ está lista. Envía tu primer reporte para personalizarla.",
+  "onb.firstCheckin": "Enviar mi primer reporte",
+  "onb.skipToHome": "Llévame al panel",
+
+  // roadmap
+  "rd.title": "Hoja de ruta",
+  "rd.subtitle": "Del prototipo del hackathon a vigilancia Una Salud estatal",
+  "rd.now": "Ahora (mayo 2026)",
+  "rd.q3": "T3 2026 — Piloto",
+  "rd.q4": "T4 2026 — Alianzas",
+  "rd.q1": "T1 2027 — Escala",
+  "rd.beyond": "2027+ — Más allá",
+  "rd.metricsTitle": "Qué mediremos durante el piloto",
+  "rd.investTitle": "Qué se necesita para operar a escala estatal",
+
+  // playbook
+  "pb.title": "Cómo funciona Spark AZ en Arizona",
+  "pb.subtitle": "Tres flujos reales: departamento de salud del condado, comunidad tribal, clínica fronteriza.",
+  "pb.county.title": "Departamento de Salud Pública de Maricopa",
+  "pb.tribal.title": "Salud comunitaria tribal Apache / Navajo",
+  "pb.border.title": "Clínica fronteriza Santa Cruz / Yuma",
+  "pb.day": "Día",
+  "pb.useCaseLabel": "Caso de uso",
+  "pb.outcomeLabel": "Resultado",
+
+  // dashboard additions
+  "home.trend7": "Tendencia 7 días",
+  "home.trendEmpty": "Aún no hay datos suficientes — sigue reportando.",
+  "home.contribution": "Aporte de tu condado",
+  "home.contribReports": "reportes hoy",
+  "home.contribTarget": "meta para detección de señales",
+  "home.contribAddOne": "Suma el tuyo →",
+  "home.realtime.newAlert": "Nueva alerta en",
+
+  // review queue
+  "review.export": "Exportar CSV",
+  "review.exported": "Exportado",
+
+  // command palette
+  "cmd.placeholder": "Salta a un condado, página o escenario…",
+  "cmd.empty": "Nada coincide.",
+  "cmd.section.pages": "Páginas",
+  "cmd.section.counties": "Condados de Arizona",
+  "cmd.section.scenarios": "Escenarios de demo",
+  "cmd.section.actions": "Acciones",
+  "cmd.toggleTheme": "Cambiar tema oscuro / claro",
+  "cmd.toggleLocale": "Cambiar idioma (EN / ES)",
+  "cmd.runCheckin": "Abrir el reporte diario",
+
+  // empty states
+  "empty.alerts": "No hay alertas pendientes. Todo tranquilo ahora.",
+  "empty.county": "Toca un condado en el mapa.",
+  "empty.clusters": "Aún no hay clústeres detectados — el sistema se está preparando.",
+
+  // auth / account dropdown
+  "auth.account": "Cuenta",
+  "auth.anonId": "ID anónimo",
+  "auth.signOut": "Cerrar sesión",
+  "auth.signOutHint": "Finaliza esta sesión anónima e inicia una nueva.",
+  "auth.signOutConfirm": "¿Cerrar sesión y reiniciar? Tus reportes permanecerán en el dataset pero ya no estarán vinculados a ti.",
 };
 
 const DICTS: Record<Locale, Dict> = { en, es };

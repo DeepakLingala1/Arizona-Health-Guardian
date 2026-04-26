@@ -148,10 +148,11 @@ export default function Checkin() {
 
       {/* County selector */}
       <div className="card-elevated p-4 flex items-center gap-3">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold shrink-0">
+        <label htmlFor="checkin-county" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold shrink-0">
           {t("common.county")}
-        </div>
+        </label>
         <select
+          id="checkin-county"
           value={county}
           onChange={(e) => setCounty(e.target.value)}
           className="flex-1 bg-transparent font-medium focus:outline-none"
@@ -168,13 +169,17 @@ export default function Checkin() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2" role="tablist" aria-label={t("checkin.title")}>
         {TABS.map((tb) => {
           const TIcon = tb.Icon;
           const active = tab === tb.id;
           return (
             <button
               key={tb.id}
+              role="tab"
+              aria-selected={active}
+              aria-controls={`tabpanel-${tb.id}`}
+              id={`tab-${tb.id}`}
               onClick={() => setTab(tb.id)}
               className={`relative p-4 rounded-2xl border-2 transition-all ${
                 active
@@ -183,7 +188,7 @@ export default function Checkin() {
               }`}
             >
               <div className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center bg-${tb.color}/10 text-${tb.color} mb-2`}>
-                <TIcon className="w-5 h-5" />
+                <TIcon className="w-5 h-5" aria-hidden="true" />
               </div>
               <div className="text-sm font-semibold">{tb.label}</div>
             </button>
@@ -195,6 +200,9 @@ export default function Checkin() {
       <AnimatePresence mode="wait">
         <motion.div
           key={tab}
+          role="tabpanel"
+          id={`tabpanel-${tab}`}
+          aria-labelledby={`tab-${tab}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}

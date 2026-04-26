@@ -20,6 +20,8 @@ interface AuthContextValue {
   profile: Profile | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  /** End the current anonymous session and reload — next mount creates a fresh anon user. */
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextValue>({
   profile: null,
   loading: true,
   refreshProfile: async () => {},
+  signOut: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -41,6 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) await fetchProfile(user.id);
+  };
+
+  const signOut = async () => {
+    // Anonymous-auth: ending the session detaches the user from their check-ins
+    // permanently. The next reload will create a fresh anonymous user.
+    await supabase.auth.signOut();
+    // Clear local cached locale/theme keys is intentionally avoided so user prefs persist.
+    setUser(null);
+    setProfile(null);
+    // Hard reload guarantees AuthContext re-runs the anonymous-sign-in path cleanly.
+    if (typeof window !== "undefined") window.location.assign("/");
   };
 
   useEffect(() => {
@@ -77,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, refreshProfile, signOut }}>
       {children}
     </AuthContext.Provider>
   );

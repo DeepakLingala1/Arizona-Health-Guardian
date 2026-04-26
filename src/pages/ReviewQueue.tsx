@@ -1,7 +1,8 @@
 // Spark AZ — Analyst HITL Review Queue
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, X, Edit3, Check, AlertTriangle, History } from "lucide-react";
+import { ShieldCheck, X, Edit3, Check, AlertTriangle, History, Download, Inbox } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/lib/i18n";
@@ -65,6 +66,43 @@ export default function ReviewQueue() {
     setTimeout(() => window.location.reload(), 600);
   }
 
+  function exportCsv() {
+    const esc = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const alertsHeader = ["id","county","severity","status","title","body","ai_generated","created_at","reviewed_at","review_notes"];
+    const alertsRows = (alerts as unknown as Array<Record<string, unknown>>).map((a) => [
+      a.id, a.county, a.severity, a.status, a.title, a.body,
+      a.ai_generated ?? "", a.created_at, a.reviewed_at ?? "", a.review_notes ?? "",
+    ].map(esc).join(","));
+    const logHeader = ["id","alert_id","actor","action","before_title","after_title","created_at"];
+    const logRows = (logs as unknown as Array<Record<string, unknown>>).map((l) => {
+      const before = (l.before as { title?: string } | null) ?? {};
+      const after = (l.after as { title?: string } | null) ?? {};
+      return [
+        l.id, l.alert_id ?? "", l.actor ?? "", l.action,
+        before.title ?? "", after.title ?? "",
+        l.created_at,
+      ].map(esc).join(",");
+    });
+    const csv =
+      `# spark-az alerts export · ${new Date().toISOString()}\n` +
+      `# filter: ${filter}\n\n` +
+      `# alerts\n${alertsHeader.join(",")}\n${alertsRows.join("\n")}\n\n` +
+      `# review_log (last 20)\n${logHeader.join(",")}\n${logRows.join("\n")}\n`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `spark-az-alerts-${filter}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t("review.exported"));
+  }
+
   async function act(alert_id: string, action: "approve" | "edit" | "reject", overrideTitle?: string, overrideBody?: string) {
     setBusy(true);
     try {
@@ -126,25 +164,40 @@ export default function ReviewQueue() {
           <p className="text-muted-foreground text-sm mt-1">{t("review.subtitle")}</p>
         </div>
 
-        <div className="card-elevated p-1 inline-flex">
-          {(["pending", "approved", "rejected", "all"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize ${
-                filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="card-elevated p-1 inline-flex">
+            {(["pending", "approved", "rejected", "all"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize ${
+                  filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={alerts.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold hover:bg-secondary disabled:opacity-40"
+            aria-label={t("review.export")}
+          >
+            <Download className="w-3.5 h-3.5" aria-hidden="true" />
+            {t("review.export")}
+          </button>
         </div>
       </div>
 
       {alerts.length === 0 ? (
-        <div className="card-elevated p-8 text-center text-sm text-muted-foreground">
-          {t("review.empty")}
-        </div>
+        <EmptyState
+          variant="alerts"
+          Icon={Inbox}
+          title={t("review.title")}
+          body={t("empty.alerts")}
+        />
       ) : (
         <div className="space-y-3">
           <AnimatePresence>

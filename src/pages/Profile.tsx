@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COUNTY_NAMES } from "@/lib/azCounties";
 import { PERSONAS, PersonaId, getPersona } from "@/lib/personas";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, ClipboardCheck, FileText, Database, Users, RefreshCw } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, FileText, Database, Users, RefreshCw, Rocket, Map as MapIcon, LogOut } from "lucide-react";
 
 const CONDITIONS = [
   { id: "asthma", en: "Asthma", es: "Asma" },
@@ -18,9 +18,14 @@ const CONDITIONS = [
 ];
 
 export default function Profile() {
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile, signOut } = useAuth();
   const { t, locale, setLocale } = useLocale();
   const navigate = useNavigate();
+
+  async function handleSignOut() {
+    if (!confirm(t("auth.signOutConfirm"))) return;
+    await signOut();
+  }
 
   const [persona, setPersona] = useState<PersonaId>(((profile as any)?.persona ?? "urban"));
   const [county, setCounty] = useState<string>(profile?.home_county ?? "Pima");
@@ -164,6 +169,34 @@ export default function Profile() {
         <button onClick={() => navigate("/data-sources")} className="card-elevated p-4 text-left hover:shadow-glow">
           <Database className="w-5 h-5 text-primary mb-2" />
           <div className="font-semibold">{t("nav.dataSources")}</div>
+        </button>
+        <button onClick={() => navigate("/playbook")} className="card-elevated p-4 text-left hover:shadow-glow">
+          <MapIcon className="w-5 h-5 text-primary mb-2" />
+          <div className="font-semibold">{t("nav.playbook")}</div>
+        </button>
+        <button onClick={() => navigate("/roadmap")} className="card-elevated p-4 text-left hover:shadow-glow">
+          <Rocket className="w-5 h-5 text-primary mb-2" />
+          <div className="font-semibold">{t("nav.roadmap")}</div>
+        </button>
+      </div>
+
+      {/* Sign out / reset session */}
+      <div className="card-elevated p-5 flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+          <LogOut className="w-5 h-5 text-destructive" aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-sm">{t("auth.signOut")}</div>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("auth.signOutHint")}</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-destructive/30 text-destructive text-sm font-semibold hover:bg-destructive/10"
+          aria-label={t("auth.signOut")}
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+          {t("auth.signOut")}
         </button>
       </div>
 
